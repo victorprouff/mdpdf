@@ -102,11 +102,21 @@ th, td {
 
 ## Todo :
 
-- [ ] Rajouter un repo pour les templates (~/.mdpdf)
-- [ ] Rajouter dans ce répertoire un dossier themes contenant pour chaque thème un répertoire
+- [x] Rajouter un repo pour les templates (~/.mdpdf)
+- [x] Rajouter dans ce répertoire un dossier themes contenant pour chaque thème un répertoire
+    - [x] Formation (actuel)
     - [ ] Default
-    - [ ] Formation (actuel)
     - [ ] Formation-Uneeti (actuel)
+- [ ] Pouvoir choisir le thème via un paramètre --theme=formation
+- [ ] Gérer l'orientation (paysage/portrait)
+- [ ] Ajouter des propriétés dans le markdown pour indiquer le theme, l'orientation, faire disparaitre ou apparaitre header, footer, logo (pour gérer des cas particulier)
+- [ ] Du coup nouveau comportement :
+    - Si on n'indique aucun paramètre : Il export tous les fichiers .md du dossier courant en .pdf avec theme indiqué dans les paramètres du .md
+    - Si on indique un ou plusieurs fichier en particulier : il le ou les convertis en .pdf avec thème et propriété indiqué dans les paramètres du .md
+    - Si paramètre indiqué, surcharge le paramètre indiqué dans fichier .md
+    - Si aucun paramètre indiqué, prends valeur par défaut (thème default, portrait, sans logo etc.)
+- [ ] Améliorer rendu des citations [!INFO] [!WARNING] etc
+- [ ] Extraire Header et Footer dans le thème pour pouvoir les configurer par thèmes
 
 ## Structure du PDF
 

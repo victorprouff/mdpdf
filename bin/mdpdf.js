@@ -10,8 +10,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Chemins par défaut
-const DEFAULT_LOGO = path.join(process.env.HOME, '.mdpdf', 'logo.png');
-const DEFAULT_CSS = path.join(process.env.HOME, '.mdpdf', 'template.css');
+const DEFAULT_LOGO = path.join(process.env.HOME, '.mdpdf/themes/Formation', 'logo.png');
+const DEFAULT_CSS = path.join(process.env.HOME, '.mdpdf/themes/Formation', 'template.css');
 
 // Fonction pour formater la date
 function formatDate() {

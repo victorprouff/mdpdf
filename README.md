@@ -155,10 +155,3 @@ npm unlink mdpdf
 
 - [md-to-pdf](https://www.npmjs.com/package/md-to-pdf) - Conversion Markdown vers PDF
 - [glob](https://www.npmjs.com/package/glob) - Recherche de fichiers
-
-## License
-
-MIT
-```
-
-Vous pouvez copier ce contenu dans un fichier `README.md` à la racine de votre projet ! 📄

@@ -93,12 +93,20 @@ th, td {
 
 ## Fonctionnalités
 
-✅ Header avec logo et date  
-✅ Footer personnalisable  
-✅ Support complet du Markdown (titres, listes, tableaux, liens)  
-✅ Liens cliquables dans le PDF  
-✅ Charte graphique CSS personnalisable  
-✅ Génération par lot  
+- ✅ Header avec logo et date
+- ✅ Footer personnalisable
+- ✅ Support complet du Markdown (titres, listes, tableaux, liens)
+- ✅ Liens cliquables dans le PDF
+- ✅ Charte graphique CSS personnalisable
+- ✅ Génération par lot
+
+## Todo :
+
+- [ ] Rajouter un repo pour les templates (~/.mdpdf)
+- [ ] Rajouter dans ce répertoire un dossier themes contenant pour chaque thème un répertoire
+    - [ ] Default
+    - [ ] Formation (actuel)
+    - [ ] Formation-Uneeti (actuel)
 
 ## Structure du PDF
 

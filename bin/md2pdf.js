@@ -174,7 +174,7 @@ async function generatePDF(mdFile, options = {}) {
                     },
                     displayHeaderFooter: true,
                     headerTemplate: `
-                        <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 25mm; font-size: 11px;">
+                        <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10mm 0 10mm; font-size: 11px;">
                             <img src="${logoDataUri}" style="height: 60px; display: block;">
                             <span style="color: #666; line-height: 1;">${today}</span>
                         </div>
@@ -186,7 +186,8 @@ async function generatePDF(mdFile, options = {}) {
                             Contact : 0687061835 / contact-pro@victorprouff.fr
                         </div>
                     `,
-                    printBackground: true
+                    printBackground: true,
+                    tagged: true  // Ajouter cette ligne pour les liens cliquables
                 }
             }
         );

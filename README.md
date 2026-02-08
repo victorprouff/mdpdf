@@ -1,4 +1,4 @@
-# md2pdf - Convertisseur Markdown vers PDF
+# mdpdf - Convertisseur Markdown vers PDF
 
 Outil en ligne de commande pour convertir vos fichiers Markdown en PDF professionnels avec votre charte graphique personnalisée.
 
@@ -6,7 +6,7 @@ Outil en ligne de commande pour convertir vos fichiers Markdown en PDF professio
 
 ```bash
 # Cloner ou télécharger le projet
-cd md2pdf
+cd mdpdf
 
 # Installer les dépendances
 npm install
@@ -17,12 +17,12 @@ npm link
 
 ## Configuration
 
-Créez vos templates par défaut dans `~/.md2pdf/` :
+Créez vos templates par défaut dans `~/.mdpdf/` :
 
 ```bash
-mkdir -p ~/.md2pdf
-cp logo.png ~/.md2pdf/
-cp template.css ~/.md2pdf/
+mkdir -p ~/.mdpdf
+cp logo.png ~/.mdpdf/
+cp template.css ~/.mdpdf/
 ```
 
 **Fichiers nécessaires :**
@@ -116,7 +116,7 @@ th, td {
 
 ## Personnalisation du footer
 
-Éditez `bin/md2pdf.js`, section `footerTemplate` :
+Éditez `bin/mdpdf.js`, section `footerTemplate` :
 
 ```javascript
 footerTemplate: `

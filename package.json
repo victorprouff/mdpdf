@@ -4,11 +4,11 @@
   "type": "module",
   "description": "Convertisseur Markdown vers PDF avec template Qualiopi",
   "bin": {
-    "md2pdf": "./bin/md2pdf.js"
+    "mdpdf": "./bin/md2pdf.js"
   },
   "dependencies": {
     "md-to-pdf": "^5.2.5",
-    "glob": "^10.3.10"
+    "glob": "^13.0.1"
   },
   "author": "Victor Prouff",
   "license": "MIT"

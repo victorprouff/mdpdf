@@ -32,6 +32,102 @@ function loadLogo(logoPath) {
     return `data:image/png;base64,${logoBase64}`;
 }
 
+// Fonction pour obtenir le CSS par défaut
+function getDefaultCSS() {
+    return `
+/* === Style du corps === */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* === Titres === */
+h1 {
+    color: #2C5F8D;
+    font-size: 24pt;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 3px solid #2C5F8D;
+    padding-bottom: 10px;
+}
+
+h2 {
+    color: #2C5F8D;
+    font-size: 18pt;
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+
+h3 {
+    color: #4A90E2;
+    font-size: 14pt;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+/* === Paragraphes === */
+p {
+    margin-bottom: 12px;
+    text-align: justify;
+}
+
+/* === Listes === */
+ul > li {
+    margin-bottom: 10px;
+}
+
+ul > li > ul > li {
+    margin-bottom: 10px;
+}
+
+ul > li > ul {
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+ul > li:last-child,
+ul > li > ul > li:last-child {
+    margin-bottom: 0;
+}
+
+/* === Tableaux === */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px 0;
+    border: 1px solid #000;
+    page-break-inside: avoid;
+}
+
+th, td {
+    border: 1px solid #000;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    color: #2C5F8D;
+}
+
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+/* === Pagination === */
+h1, h2, h3 {
+    page-break-after: avoid;
+}
+
+p, li {
+    page-break-inside: avoid;
+}
+`;
+}
+
 // Fonction pour générer un PDF
 async function generatePDF(mdFile, options = {}) {
     const today = formatDate();
@@ -42,13 +138,32 @@ async function generatePDF(mdFile, options = {}) {
     
     console.log(`📄 Conversion de ${mdFile}...`);
 
-        
+    // Lire le CSS et l'injecter directement
+    const cssPath = options.css || DEFAULT_CSS;
+    let cssContent = '';
+    
+    console.log(`🔍 Recherche du CSS : ${cssPath}`);
+
+    if (fs.existsSync(cssPath)) {
+        cssContent = fs.readFileSync(cssPath, 'utf8');
+        console.log(`✅ CSS chargé avec succès (${cssContent.length} caractères)`);
+    } else {
+        console.warn(`⚠️  CSS non trouvé : ${cssPath}`);
+        cssContent = getDefaultCSS();
+        console.log(`📋 Utilisation du CSS par défaut (${cssContent.length} caractères)`);
+    }
+
+    console.log(`🎨 Logo : ${logoDataUri ? 'Chargé ✓' : 'Non disponible ✗'}`);
+    console.log(`📅 Date : ${today}`);
+    console.log(`📤 Sortie : ${outputPath}`);
+    console.log(`🚀 Lancement de la génération PDF...\n`);
+
     try {
         await mdToPdf(
             { path: mdFile },
             {
                 dest: outputPath,
-                stylesheet: [options.css || DEFAULT_CSS],
+                css: cssContent,  // Changement ici : injection directe au lieu de stylesheet
                 pdf_options: {
                     format: 'A4',
                     margin: {
@@ -66,9 +181,9 @@ async function generatePDF(mdFile, options = {}) {
                     `,
                     footerTemplate: `
                         <div style="width: 100%; text-align: center; font-size: 9px; color: #666; line-height: 1.4;">
-                            Prouff Of Concept, 14 Rue Bausset, 75015 Paris, Siret : 91427637300018 <br>
+                            Prouff Of Concept, 14 Rue Bausset, 75015 Paris, Siret : 91427637300018 <br>
                             Organisme de formation enregistré sous le numéro 11757305375 auprès de la DRIEETS <br>
-                            Contact : 0687061835 / contact-pro@victorprouff.fr
+                            Contact : 0687061835 / contact-pro@victorprouff.fr
                         </div>
                     `,
                     printBackground: true
@@ -76,14 +191,16 @@ async function generatePDF(mdFile, options = {}) {
             }
         );
         
-        console.log(`✓ PDF généré : ${outputPath}`);
+        console.log(`\n✅ PDF généré avec succès : ${outputPath}\n`);
     } catch (error) {
-        console.error(`❌ Erreur lors de la conversion de ${mdFile}:`, error.message);
+        console.error(`\n❌ Erreur lors de la conversion de ${mdFile}:`);
+        console.error(error.message);
+        console.error(error.stack);
     }
 }
 
 // Fonction principale
-async function main() {
+async function main() {    
     const args = process.argv.slice(2);
     
     // Options

@@ -137,6 +137,13 @@ Puis réinstallé le projet avec la commande :
 ```bash
 npm link mdpdf
 ```
+### Pour plus de simplicité, j'ai rajouté le raccourcis dans ma configuration zsh
+
+```bash
+alias mdpdf-reload="cd /chemin/complet/vers/votre/projet/mdpdf && ./reload.sh && cd -"
+```
+
+Un petit coup de `mdpdf-reload` n'importe où dans un terminal et c'est rechargé.
 
 ## Désinstallation
 

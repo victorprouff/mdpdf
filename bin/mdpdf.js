@@ -10,8 +10,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Chemins par défaut
-const DEFAULT_LOGO = path.join(process.env.HOME, '.md2pdf', 'logo.png');
-const DEFAULT_CSS = path.join(process.env.HOME, '.md2pdf', 'template.css');
+const DEFAULT_LOGO = path.join(process.env.HOME, '.mdpdf', 'logo.png');
+const DEFAULT_CSS = path.join(process.env.HOME, '.mdpdf', 'template.css');
 
 // Fonction pour formater la date
 function formatDate() {
@@ -258,15 +258,15 @@ async function main() {
 
 function showHelp() {
     console.log(`
-md2pdf - Convertisseur Markdown vers PDF avec template Qualiopi
+mdpdf - Convertisseur Markdown vers PDF avec template Qualiopi
 
 USAGE:
-    md2pdf [fichiers...] [options]
+    mdpdf [fichiers...] [options]
 
 EXEMPLES:
-    md2pdf document.md              # Convertir un fichier
-    md2pdf doc1.md doc2.md          # Convertir plusieurs fichiers
-    md2pdf                          # Convertir tous les .md du répertoire
+    mdpdf document.md              # Convertir un fichier
+    mdpdf doc1.md doc2.md          # Convertir plusieurs fichiers
+    mdpdf                          # Convertir tous les .md du répertoire
 
 OPTIONS:
     --logo <chemin>                 # Utiliser un logo personnalisé
@@ -274,14 +274,14 @@ OPTIONS:
     --help, -h                      # Afficher cette aide
 
 CONFIGURATION:
-    Les fichiers par défaut sont cherchés dans ~/.md2pdf/
+    Les fichiers par défaut sont cherchés dans ~/.mdpdf/
     - logo.png                      # Logo par défaut
     - template.css                  # CSS par défaut
 
 Pour configurer vos templates par défaut:
-    mkdir -p ~/.md2pdf
-    cp logo.png ~/.md2pdf/
-    cp template.css ~/.md2pdf/
+    mkdir -p ~/.mdpdf
+    cp logo.png ~/.mdpdf/
+    cp template.css ~/.mdpdf/
 `);
 }
 

@@ -1,10 +1,10 @@
 {
-  "name": "md2pdf",
+  "name": "mdpdf",
   "version": "1.0.0",
   "type": "module",
   "description": "Convertisseur Markdown vers PDF avec template Qualiopi",
   "bin": {
-    "mdpdf": "./bin/md2pdf.js"
+    "mdpdf": "./bin/mdpdf.js"
   },
   "dependencies": {
     "glob": "^13.0.1",

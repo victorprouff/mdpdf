@@ -105,9 +105,9 @@ th, td {
 - [x] Rajouter un repo pour les templates (~/.mdpdf)
 - [x] Rajouter dans ce répertoire un dossier themes contenant pour chaque thème un répertoire
     - [x] Formation (actuel)
-    - [ ] Default
+    - [x] Default
     - [ ] Formation-Uneeti (actuel)
-- [ ] Pouvoir choisir le thème via un paramètre --theme=formation
+- [x] Pouvoir choisir le thème via un paramètre --template formation
 - [ ] Gérer l'orientation (paysage/portrait)
 - [ ] Ajouter des propriétés dans le markdown pour indiquer le theme, l'orientation, faire disparaitre ou apparaitre header, footer, logo (pour gérer des cas particulier)
 - [ ] Du coup nouveau comportement :

@@ -9,9 +9,9 @@ import { glob } from 'glob';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Chemins par défaut
-const DEFAULT_LOGO = path.join(process.env.HOME, '.mdpdf/themes/Formation', 'logo.png');
-const DEFAULT_CSS = path.join(process.env.HOME, '.mdpdf/themes/Formation', 'template.css');
+// Chemins des templates
+const PROJECT_TEMPLATES = path.join(__dirname, '..', 'templates');
+const USER_TEMPLATES = path.join(process.env.HOME, '.mdpdf', 'templates');
 
 // Fonction pour formater la date
 function formatDate() {
@@ -22,6 +22,32 @@ function formatDate() {
     });
 }
 
+// Fonction pour charger un template
+function loadTemplate(templateName) {
+    // Chercher d'abord dans les templates utilisateur, puis dans les templates du projet
+    const userTemplatePath = path.join(USER_TEMPLATES, templateName);
+    const projectTemplatePath = path.join(PROJECT_TEMPLATES, templateName);
+    
+    let templatePath;
+    if (fs.existsSync(userTemplatePath)) {
+        templatePath = userTemplatePath;
+        console.log(`📁 Template utilisateur : ${templateName}`);
+    } else if (fs.existsSync(projectTemplatePath)) {
+        templatePath = projectTemplatePath;
+        console.log(`📁 Template projet : ${templateName}`);
+    } else {
+        console.error(`❌ Template introuvable : ${templateName}`);
+        return null;
+    }
+    
+    return {
+        header: path.join(templatePath, 'header.html'),
+        footer: path.join(templatePath, 'footer.html'),
+        css: path.join(templatePath, 'template.css'),
+        logo: path.join(templatePath, 'logo.png')
+    };
+}
+
 // Fonction pour charger le logo en base64
 function loadLogo(logoPath) {
     if (!fs.existsSync(logoPath)) {
@@ -30,6 +56,23 @@ function loadLogo(logoPath) {
     }
     const logoBase64 = fs.readFileSync(logoPath, { encoding: 'base64' });
     return `data:image/png;base64,${logoBase64}`;
+}
+
+// Fonction pour charger un fichier HTML template et remplacer les variables
+function loadHTMLTemplate(templatePath, variables) {
+    if (!fs.existsSync(templatePath)) {
+        return '';
+    }
+    
+    let content = fs.readFileSync(templatePath, 'utf8');
+    
+    // Remplacer les variables {{VAR}} par leurs valeurs
+    Object.keys(variables).forEach(key => {
+        const regex = new RegExp(`{{${key}}}`, 'g');
+        content = content.replace(regex, variables[key] || '');
+    });
+    
+    return content;
 }
 
 // Fonction pour obtenir le CSS par défaut
@@ -131,63 +174,84 @@ p, li {
 // Fonction pour générer un PDF
 async function generatePDF(mdFile, options = {}) {
     const today = formatDate();
-    const logoDataUri = loadLogo(options.logo || DEFAULT_LOGO);
     
     const baseName = path.basename(mdFile, '.md');
     const outputPath = options.output || `${baseName}.pdf`;
     
-    console.log(`📄 Conversion de ${mdFile}...`);
+    console.log(`\n📄 Conversion de ${mdFile}...`);
 
-    // Lire le CSS et l'injecter directement
-    const cssPath = options.css || DEFAULT_CSS;
-    let cssContent = '';
+    // Charger le template
+    const templateName = options.template || 'default';
+    const template = loadTemplate(templateName);
     
-    console.log(`🔍 Recherche du CSS : ${cssPath}`);
-
-    if (fs.existsSync(cssPath)) {
-        cssContent = fs.readFileSync(cssPath, 'utf8');
-        console.log(`✅ CSS chargé avec succès (${cssContent.length} caractères)`);
-    } else {
-        console.warn(`⚠️  CSS non trouvé : ${cssPath}`);
-        cssContent = getDefaultCSS();
-        console.log(`📋 Utilisation du CSS par défaut (${cssContent.length} caractères)`);
+    if (!template) {
+        console.error(`❌ Impossible de charger le template : ${templateName}`);
+        return;
     }
-
-    console.log(`🎨 Logo : ${logoDataUri ? 'Chargé ✓' : 'Non disponible ✗'}`);
+    
+    // Charger le logo
+    const logoDataUri = loadLogo(template.logo);
+    
+    // Variables pour les templates HTML
+    const templateVars = {
+        LOGO: logoDataUri || '',
+        DATE: today
+    };
+    
+    // Charger header et footer selon les options
+    let headerTemplate = '<div></div>'; // Template vide par défaut
+    let footerTemplate = '<div></div>'; // Template vide par défaut
+    
+    if (options.header !== false) {
+        headerTemplate = loadHTMLTemplate(template.header, templateVars);
+        console.log(`✅ Header chargé`);
+    } else {
+        console.log(`⊘ Header désactivé`);
+    } 
+    
+    if (options.footer !== false) {
+        footerTemplate = loadHTMLTemplate(template.footer, templateVars);
+        console.log(`✅ Footer chargé`);
+    } else {
+        console.log(`⊘ Footer désactivé`);
+    }
+    
+    // Charger le CSS
+    let cssContent = '';
+    if (fs.existsSync(template.css)) {
+        cssContent = fs.readFileSync(template.css, 'utf8');
+        console.log(`✅ CSS chargé (${cssContent.length} caractères)`);
+    } else {
+        console.warn(`⚠️  CSS non trouvé, utilisation du style par défaut`);
+        cssContent = getDefaultCSS();
+    }
+    
     console.log(`📅 Date : ${today}`);
     console.log(`📤 Sortie : ${outputPath}`);
     console.log(`🚀 Lancement de la génération PDF...\n`);
-
+        
     try {
+        // Calculer les marges en fonction de header/footer
+        const margins = {
+            top: options.header !== false ? '100px' : '25mm',
+            bottom: options.footer !== false ? '120px' : '25mm',
+            left: '25mm',
+            right: '25mm'
+        };
+        
         await mdToPdf(
             { path: mdFile },
             {
                 dest: outputPath,
-                css: cssContent,  // Changement ici : injection directe au lieu de stylesheet
+                css: cssContent,
                 pdf_options: {
                     format: 'A4',
-                    margin: {
-                        top: '100px',
-                        bottom: '120px',
-                        left: '25mm',
-                        right: '25mm'
-                    },
-                    displayHeaderFooter: true,
-                    headerTemplate: `
-                        <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10mm 0 10mm; font-size: 11px;">
-                            <img src="${logoDataUri}" style="height: 60px; display: block;">
-                            <span style="color: #666; line-height: 1;">${today}</span>
-                        </div>
-                    `,
-                    footerTemplate: `
-                        <div style="width: 100%; text-align: center; font-size: 9px; color: #666; line-height: 1.4;">
-                            Prouff Of Concept, 14 Rue Bausset, 75015 Paris, Siret : 91427637300018 <br>
-                            Organisme de formation enregistré sous le numéro 11757305375 auprès de la DRIEETS <br>
-                            Contact : 0687061835 / contact-pro@victorprouff.fr
-                        </div>
-                    `,
+                    margin: margins,
+                    displayHeaderFooter: (options.header !== false || options.footer !== false),
+                    headerTemplate: headerTemplate,
+                    footerTemplate: footerTemplate,
                     printBackground: true,
-                    tagged: true  // Ajouter cette ligne pour les liens cliquables
+                    tagged: true,
                 }
             }
         );
@@ -200,25 +264,59 @@ async function generatePDF(mdFile, options = {}) {
     }
 }
 
+// Fonction pour lister les templates disponibles
+function listTemplates() {
+    console.log('\n📚 Templates disponibles :\n');
+    
+    // Templates du projet
+    if (fs.existsSync(PROJECT_TEMPLATES)) {
+        const projectTemplates = fs.readdirSync(PROJECT_TEMPLATES)
+            .filter(f => fs.statSync(path.join(PROJECT_TEMPLATES, f)).isDirectory());
+        
+        if (projectTemplates.length > 0) {
+            console.log('🔹 Templates du projet :');
+            projectTemplates.forEach(t => console.log(`   - ${t}`));
+        }
+    }
+    
+    // Templates utilisateur
+    if (fs.existsSync(USER_TEMPLATES)) {
+        const userTemplates = fs.readdirSync(USER_TEMPLATES)
+            .filter(f => fs.statSync(path.join(USER_TEMPLATES, f)).isDirectory());
+        
+        if (userTemplates.length > 0) {
+            console.log('\n🔸 Templates utilisateur (~/.mdpdf/templates/) :');
+            userTemplates.forEach(t => console.log(`   - ${t}`));
+        }
+    }
+    
+    console.log('');
+}
+
 // Fonction principale
-async function main() {    
+async function main() {
     const args = process.argv.slice(2);
     
     // Options
     const options = {
-        logo: DEFAULT_LOGO,
-        css: DEFAULT_CSS
+        template: 'default',
+        header: true,
+        footer: true
     };
     
     // Parser les arguments
     let files = [];
     for (let i = 0; i < args.length; i++) {
-        if (args[i] === '--logo' && args[i + 1]) {
-            options.logo = path.resolve(args[i + 1]);
+        if (args[i] === '--template' && args[i + 1]) {
+            options.template = args[i + 1];
             i++;
-        } else if (args[i] === '--css' && args[i + 1]) {
-            options.css = path.resolve(args[i + 1]);
-            i++;
+        } else if (args[i] === '--no-header') {
+            options.header = false;
+        } else if (args[i] === '--no-footer') {
+            options.footer = false;
+        } else if (args[i] === '--list-templates') {
+            listTemplates();
+            return;
         } else if (args[i] === '--help' || args[i] === '-h') {
             showHelp();
             return;
@@ -258,32 +356,47 @@ async function main() {
 
 function showHelp() {
     console.log(`
-mdpdf - Convertisseur Markdown vers PDF avec template Qualiopi
+mdpdf - Convertisseur Markdown vers PDF avec templates
 
 USAGE:
     mdpdf [fichiers...] [options]
 
 EXEMPLES:
-    mdpdf document.md              # Convertir un fichier
-    mdpdf doc1.md doc2.md          # Convertir plusieurs fichiers
-    mdpdf                          # Convertir tous les .md du répertoire
+    mdpdf document.md                    # Convertir un fichier avec le template par défaut
+    mdpdf doc1.md doc2.md                # Convertir plusieurs fichiers
+    mdpdf                                # Convertir tous les .md du répertoire
+    mdpdf document.md --template qualiopi # Utiliser un template spécifique
+    mdpdf document.md --no-header        # Sans header
+    mdpdf document.md --no-footer        # Sans footer
+    mdpdf document.md --no-header --no-footer # Sans header ni footer
 
 OPTIONS:
-    --logo <chemin>                 # Utiliser un logo personnalisé
-    --css <chemin>                  # Utiliser un CSS personnalisé
-    --help, -h                      # Afficher cette aide
+    --template <nom>                     # Utiliser un template spécifique (défaut: default)
+    --no-header                          # Désactiver le header
+    --no-footer                          # Désactiver le footer
+    --list-templates                     # Lister les templates disponibles
+    --help, -h                           # Afficher cette aide
 
-CONFIGURATION:
-    Les fichiers par défaut sont cherchés dans ~/.mdpdf/
-    - logo.png                      # Logo par défaut
-    - template.css                  # CSS par défaut
+TEMPLATES:
+    Les templates sont cherchés dans cet ordre :
+    1. ~/.mdpdf/templates/<nom>/
+    2. ./templates/<nom>/
 
-Pour configurer vos templates par défaut:
-    mkdir -p ~/.mdpdf
-    cp logo.png ~/.mdpdf/
-    cp template.css ~/.mdpdf/
+    Structure d'un template :
+    <nom>/
+    ├── header.html       # Template du header (optionnel)
+    ├── footer.html       # Template du footer (optionnel)
+    ├── template.css      # Styles CSS
+    └── logo.png          # Logo (optionnel)
+
+    Variables disponibles dans header.html et footer.html :
+    - {{LOGO}}  : Logo en base64
+    - {{DATE}}  : Date du jour au format français
+
+Pour créer un nouveau template :
+    mkdir -p ~/.mdpdf/templates/mon-template
+    # Puis ajoutez vos fichiers header.html, footer.html, template.css, logo.png
 `);
 }
-
 // Lancer le programme
 main().catch(console.error);

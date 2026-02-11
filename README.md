@@ -188,7 +188,7 @@ th, td {
 - [ ] Visualiser le rendu live de ce que donne un template donné à partir d'un .md d'exemple comprenant tous types de balise md
     - Respecter le format de la page (A4) et le style CSS
     - Chaque modification dans le css doit être appliqué en live
-- [ ] Rajouter un panel à gauche avec les titres avec possibilité de changer la taille, la couleur et le centrage qui s'applique au fichier css et au rendu de droite en live
+- [ ] Rajouter un panneau à gauche avec les titres avec possibilité de changer la taille, la couleur et le centrage qui s'applique au fichier css et au rendu de droite en live
 - [ ] Activer/désactiver la présence des header/footer
 - [ ] Pouvoir custom le header/footer en les divisants en 3 parties : droite, centre, gauche, ajouter une image, sa position, marge au bord, texte, taille de texte à chaque partie, italique, gras, pouvoir rajouter des infos normée (nom du doc, numéro de page (format : X ou X/Y ou Page : X), date, etc)
 - [ ] Style de texte dans le body (taille, couleur etc)

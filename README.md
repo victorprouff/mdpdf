@@ -49,22 +49,79 @@ mdpdf doc1.md doc2.md doc3.md
 mdpdf
 ```
 
-### Utiliser un logo ou CSS personnalisé
+### Utiliser un template spécifique
 
 ```bash
-mdpdf document.md --logo mon-logo.png --css mon-style.css
+mdpdf document.md --template qualiopi
+```
+
+### Orientation paysage
+
+```bash
+mdpdf document.md --landscape
+```
+
+### Sans header ni footer
+
+```bash
+mdpdf document.md --no-header --no-footer
 ```
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `--template <nom>` | Utiliser un template spécifique |
+| `--template <nom>` | Utiliser un template spécifique (défaut: `default`) |
 | `--no-header` | Désactiver le header |
 | `--no-footer` | Désactiver le footer |
 | `--landscape` | Orientation paysage (défaut: portrait) |
+| `--output <fichier>` | Chemin du fichier PDF de sortie |
 | `--list-templates` | Lister les templates disponibles |
 | `--help`, `-h` | Afficher l'aide |
+
+## Front Matter YAML
+
+Vous pouvez configurer les options directement dans l'en-tête YAML de chaque fichier Markdown. Cela permet une configuration par fichier, sans avoir à passer les options en CLI.
+
+### Exemple
+
+```markdown
+---
+template: formation
+landscape: true
+header: show
+footer: hidden
+output: mon-document.pdf
+---
+
+# Mon document
+
+Contenu du document...
+```
+
+### Clés supportées
+
+| Clé | Type | Valeurs | Description |
+|-----|------|---------|-------------|
+| `template` | string | nom du template | Template à utiliser |
+| `landscape` | boolean | `true` / `false` | Orientation paysage |
+| `header` | string | `show` / `hidden` | Afficher ou masquer le header |
+| `footer` | string | `show` / `hidden` | Afficher ou masquer le footer |
+| `output` | string | chemin du fichier | Chemin du PDF de sortie |
+
+### Priorité de fusion
+
+Les options sont fusionnées selon la priorité suivante :
+
+```
+défaut < front matter < CLI explicite
+```
+
+- Les **valeurs par défaut** s'appliquent toujours (template `default`, portrait, header/footer activés)
+- Le **front matter** du fichier écrase les valeurs par défaut
+- Seules les options **explicitement passées en CLI** écrasent le front matter
+
+**Exemple :** un fichier avec `header: show` dans le front matter, lancé avec `--no-header`, aura le header désactivé (la CLI gagne).
 
 ## Exemple de template CSS
 
@@ -102,6 +159,9 @@ th, td {
 - ✅ Liens cliquables dans le PDF
 - ✅ Charte graphique CSS personnalisable
 - ✅ Génération par lot
+- ✅ Orientation paysage/portrait
+- ✅ Front matter YAML pour configuration par fichier
+- ✅ Fusion intelligente des options (défaut < front matter < CLI)
 
 ## Todo :
 
@@ -111,15 +171,15 @@ th, td {
     - [x] Default
     - [ ] Formation-Uneeti (actuel)
 - [x] Pouvoir choisir le thème via un paramètre --template formation
-- [ ] Gérer l'orientation (paysage/portrait)
-- [ ] Ajouter des propriétés dans le markdown pour indiquer le theme, l'orientation, faire disparaitre ou apparaitre header, footer, logo (pour gérer des cas particulier)
-- [ ] Du coup nouveau comportement :
+- [x] Gérer l'orientation (paysage/portrait)
+- [x] Ajouter des propriétés dans le markdown pour indiquer le theme, l'orientation, faire disparaitre ou apparaitre header, footer, logo (pour gérer des cas particulier)
+- [x] Du coup nouveau comportement :
     - Si on n'indique aucun paramètre : Il export tous les fichiers .md du dossier courant en .pdf avec theme indiqué dans les paramètres du .md
     - Si on indique un ou plusieurs fichier en particulier : il le ou les convertis en .pdf avec thème et propriété indiqué dans les paramètres du .md
     - Si paramètre indiqué, surcharge le paramètre indiqué dans fichier .md
     - Si aucun paramètre indiqué, prends valeur par défaut (thème default, portrait, sans logo etc.)
 - [ ] Améliorer rendu des citations [!INFO] [!WARNING] etc
-- [ ] Extraire Header et Footer dans le thème pour pouvoir les configurer par thèmes
+- [x] Extraire Header et Footer dans le thème pour pouvoir les configurer par thèmes
 
 ### Projet annexe : MdPdf Template Builder
 - [ ] Visualiser le rendu live de ce que donne un template donné à partir d'un .md d'exemple comprenant tous types de balise md
@@ -135,20 +195,31 @@ th, td {
 
 ## Structure du PDF
 
-- **Header** : Logo à gauche, date du jour à droite
+- **Header** : Logo à gauche, date du jour à droite (configurable par template)
 - **Corps** : Contenu Markdown converti avec votre CSS
-- **Footer** : Informations de contact (personnalisable dans le code)
+- **Footer** : Informations de contact (configurable par template)
 
-## Personnalisation du footer
+## Personnalisation des templates
 
-Éditez `bin/mdpdf.js`, section `footerTemplate` :
+Chaque template est un dossier contenant :
 
-```javascript
-footerTemplate: `
-    <div style="width: 100%; text-align: center; font-size: 9px; color: #666;">
-        Votre texte personnalisé
-    </div>
-`,
+```
+mon-template/
+├── header.html       # Template du header (variables : {{LOGO}}, {{DATE}})
+├── footer.html       # Template du footer (variables : {{LOGO}}, {{DATE}})
+├── template.css      # Styles CSS
+└── logo.png          # Logo (optionnel)
+```
+
+Les templates sont cherchés dans cet ordre :
+1. `~/.mdpdf/templates/<nom>/` (templates utilisateur)
+2. `./templates/<nom>/` (templates du projet)
+
+Pour créer un nouveau template :
+
+```bash
+mkdir -p ~/.mdpdf/templates/mon-template
+# Puis ajoutez vos fichiers header.html, footer.html, template.css, logo.png
 ```
 ## Mise à jour
 
@@ -180,3 +251,4 @@ npm unlink mdpdf
 
 - [md-to-pdf](https://www.npmjs.com/package/md-to-pdf) - Conversion Markdown vers PDF
 - [glob](https://www.npmjs.com/package/glob) - Recherche de fichiers
+- [gray-matter](https://www.npmjs.com/package/gray-matter) - Parsing du front matter YAML

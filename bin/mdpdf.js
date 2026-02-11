@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { glob } from 'glob';
+import matter from 'gray-matter';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -171,17 +172,82 @@ p, li {
 `;
 }
 
+// Fonction pour parser le front matter YAML d'un fichier Markdown
+function parseFrontMatter(mdFile) {
+    const content = fs.readFileSync(mdFile, 'utf8');
+    const { data } = matter(content);
+
+    const result = {};
+
+    if (data.template !== undefined) {
+        result.template = String(data.template);
+    }
+    if (data.landscape !== undefined) {
+        result.landscape = Boolean(data.landscape);
+    }
+    if (data.header !== undefined) {
+        result.header = data.header === 'show' || data.header === true;
+    }
+    if (data.footer !== undefined) {
+        result.footer = data.footer === 'show' || data.footer === true;
+    }
+    if (data.output !== undefined) {
+        result.output = String(data.output);
+    }
+
+    return result;
+}
+
+// Fonction pour fusionner les options (défaut < front matter < CLI explicite)
+function mergeOptions(defaults, frontMatter, cliOptions, cliExplicit) {
+    const result = { ...defaults };
+
+    for (const key of Object.keys(result)) {
+        if (cliExplicit.has(key)) {
+            result[key] = cliOptions[key];
+        } else if (key in frontMatter) {
+            result[key] = frontMatter[key];
+        }
+    }
+
+    // Gérer output séparément (pas dans les défauts)
+    if (cliExplicit.has('output')) {
+        result.output = cliOptions.output;
+    } else if ('output' in frontMatter) {
+        result.output = frontMatter.output;
+    }
+
+    return result;
+}
+
 // Fonction pour générer un PDF
-async function generatePDF(mdFile, options = {}) {
+async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
     const today = formatDate();
-    
+
+    // Parser le front matter et fusionner avec les options CLI
+    const defaults = {
+        template: 'default',
+        header: true,
+        footer: true,
+        landscape: false
+    };
+
+    const frontMatter = parseFrontMatter(mdFile);
+    const options = mergeOptions(defaults, frontMatter, cliOptions, cliExplicit);
+
+    // Log des options venant du front matter
+    const fmKeys = Object.keys(frontMatter);
+    if (fmKeys.length > 0) {
+        console.log(`\n📋 Front matter détecté : ${fmKeys.join(', ')}`);
+    }
+
     const baseName = path.basename(mdFile, '.md');
     const outputPath = options.output || `${baseName}.pdf`;
-    
+
     console.log(`\n📄 Conversion de ${mdFile}...`);
 
     // Charger le template
-    const templateName = options.template || 'default';
+    const templateName = options.template;
     const template = loadTemplate(templateName);
     
     if (!template) {
@@ -310,26 +376,30 @@ function listTemplates() {
 async function main() {
     const args = process.argv.slice(2);
     
-    // Options
-    const options = {
-        template: 'default',
-        header: true,
-        footer: true,
-        landscape: false
-    };
-    
+    // Options CLI et tracking des options explicitement passées
+    const cliOptions = {};
+    const cliExplicit = new Set();
+
     // Parser les arguments
     let files = [];
     for (let i = 0; i < args.length; i++) {
         if (args[i] === '--template' && args[i + 1]) {
-            options.template = args[i + 1];
+            cliOptions.template = args[i + 1];
+            cliExplicit.add('template');
             i++;
         } else if (args[i] === '--no-header') {
-            options.header = false;
+            cliOptions.header = false;
+            cliExplicit.add('header');
         } else if (args[i] === '--no-footer') {
-            options.footer = false;
+            cliOptions.footer = false;
+            cliExplicit.add('footer');
         } else if (args[i] === '--landscape') {
-            options.landscape = true;
+            cliOptions.landscape = true;
+            cliExplicit.add('landscape');
+        } else if (args[i] === '--output' && args[i + 1]) {
+            cliOptions.output = args[i + 1];
+            cliExplicit.add('output');
+            i++;
         } else if (args[i] === '--list-templates') {
             listTemplates();
             return;
@@ -364,7 +434,7 @@ async function main() {
             continue;
         }
         
-        await generatePDF(fullPath, options);
+        await generatePDF(fullPath, cliOptions, cliExplicit);
     }
     
     console.log('\n✨ Conversion terminée !');
@@ -392,8 +462,32 @@ OPTIONS:
     --no-header                          # Désactiver le header
     --no-footer                          # Désactiver le footer
     --landscape                          # Orientation paysage (défaut: portrait)
+    --output <fichier>                   # Chemin du fichier PDF de sortie
     --list-templates                     # Lister les templates disponibles
     --help, -h                           # Afficher cette aide
+
+FRONT MATTER YAML:
+    Vous pouvez configurer les options directement dans le fichier Markdown
+    via un en-tête YAML (front matter). Les options CLI explicites ont
+    priorité sur le front matter.
+
+    Exemple :
+    ---
+    template: formation
+    landscape: true
+    header: show
+    footer: hidden
+    output: mon-document.pdf
+    ---
+
+    Clés supportées :
+    - template   : nom du template (string)
+    - landscape   : true/false
+    - header      : show/hidden
+    - footer      : show/hidden
+    - output      : chemin du PDF de sortie
+
+    Priorité : défaut < front matter < CLI explicite
 
 TEMPLATES:
     Les templates sont cherchés dans cet ordre :

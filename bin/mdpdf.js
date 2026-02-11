@@ -191,6 +191,9 @@ function parseFrontMatter(mdFile) {
     if (data.footer !== undefined) {
         result.footer = data.footer === 'show' || data.footer === true;
     }
+    if (data.logo !== undefined) {
+        result.logo = data.logo === 'show' || data.logo === true;
+    }
     if (data.output !== undefined) {
         result.output = String(data.output);
     }
@@ -229,6 +232,7 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
         template: 'default',
         header: true,
         footer: true,
+        logo: true,
         landscape: false
     };
 
@@ -256,8 +260,13 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
     }
     
     // Charger le logo
-    const logoDataUri = loadLogo(template.logo);
-    
+    let logoDataUri = null;
+    if (options.logo !== false) {
+        logoDataUri = loadLogo(template.logo);
+    } else {
+        console.log(`⊘ Logo désactivé`);
+    }
+
     // Variables pour les templates HTML
     const templateVars = {
         LOGO: logoDataUri || '',
@@ -393,6 +402,9 @@ async function main() {
         } else if (args[i] === '--no-footer') {
             cliOptions.footer = false;
             cliExplicit.add('footer');
+        } else if (args[i] === '--no-logo') {
+            cliOptions.logo = false;
+            cliExplicit.add('logo');
         } else if (args[i] === '--landscape') {
             cliOptions.landscape = true;
             cliExplicit.add('landscape');
@@ -461,6 +473,7 @@ OPTIONS:
     --template <nom>                     # Utiliser un template spécifique (défaut: default)
     --no-header                          # Désactiver le header
     --no-footer                          # Désactiver le footer
+    --no-logo                            # Désactiver le logo
     --landscape                          # Orientation paysage (défaut: portrait)
     --output <fichier>                   # Chemin du fichier PDF de sortie
     --list-templates                     # Lister les templates disponibles
@@ -477,6 +490,7 @@ FRONT MATTER YAML:
     landscape: true
     header: show
     footer: hidden
+    logo: hidden
     output: mon-document.pdf
     ---
 
@@ -485,6 +499,7 @@ FRONT MATTER YAML:
     - landscape   : true/false
     - header      : show/hidden
     - footer      : show/hidden
+    - logo        : show/hidden
     - output      : chemin du PDF de sortie
 
     Priorité : défaut < front matter < CLI explicite

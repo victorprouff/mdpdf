@@ -74,6 +74,7 @@ mdpdf document.md --no-header --no-footer
 | `--template <nom>` | Utiliser un template spécifique (défaut: `default`) |
 | `--no-header` | Désactiver le header |
 | `--no-footer` | Désactiver le footer |
+| `--no-logo` | Désactiver le logo |
 | `--landscape` | Orientation paysage (défaut: portrait) |
 | `--output <fichier>` | Chemin du fichier PDF de sortie |
 | `--list-templates` | Lister les templates disponibles |
@@ -91,6 +92,7 @@ template: formation
 landscape: true
 header: show
 footer: hidden
+logo: hidden
 output: mon-document.pdf
 ---
 
@@ -107,6 +109,7 @@ Contenu du document...
 | `landscape` | boolean | `true` / `false` | Orientation paysage |
 | `header` | string | `show` / `hidden` | Afficher ou masquer le header |
 | `footer` | string | `show` / `hidden` | Afficher ou masquer le footer |
+| `logo` | string | `show` / `hidden` | Afficher ou masquer le logo |
 | `output` | string | chemin du fichier | Chemin du PDF de sortie |
 
 ### Priorité de fusion

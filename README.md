@@ -59,8 +59,11 @@ mdpdf document.md --logo mon-logo.png --css mon-style.css
 
 | Option | Description |
 |--------|-------------|
-| `--logo <chemin>` | Utiliser un logo personnalisé |
-| `--css <chemin>` | Utiliser un CSS personnalisé |
+| `--template <nom>` | Utiliser un template spécifique |
+| `--no-header` | Désactiver le header |
+| `--no-footer` | Désactiver le footer |
+| `--landscape` | Orientation paysage (défaut: portrait) |
+| `--list-templates` | Lister les templates disponibles |
 | `--help`, `-h` | Afficher l'aide |
 
 ## Exemple de template CSS

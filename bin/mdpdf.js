@@ -239,6 +239,18 @@ async function generatePDF(mdFile, options = {}) {
             right: '25mm'
         };
         
+        // Configuration de la page selon l'orientation
+        // A4 Portrait : 210mm x 297mm
+        // A4 Paysage : 297mm x 210mm
+        // Ajouter la règle @page pour l'orientation si nécessaire
+        if (options.landscape) {
+            cssContent += `
+    @page {
+        size: A4 landscape;
+    }
+    `;
+        }
+
         await mdToPdf(
             { path: mdFile },
             {
@@ -246,12 +258,13 @@ async function generatePDF(mdFile, options = {}) {
                 css: cssContent,
                 pdf_options: {
                     format: 'A4',
-                    margin: margins,
+                    landscape: options.landscape || false,
                     displayHeaderFooter: (options.header !== false || options.footer !== false),
                     headerTemplate: headerTemplate,
                     footerTemplate: footerTemplate,
                     printBackground: true,
                     tagged: true,
+                    preferCSSPageSize: true
                 }
             }
         );
@@ -301,7 +314,8 @@ async function main() {
     const options = {
         template: 'default',
         header: true,
-        footer: true
+        footer: true,
+        landscape: false
     };
     
     // Parser les arguments
@@ -314,6 +328,8 @@ async function main() {
             options.header = false;
         } else if (args[i] === '--no-footer') {
             options.footer = false;
+        } else if (args[i] === '--landscape') {
+            options.landscape = true;
         } else if (args[i] === '--list-templates') {
             listTemplates();
             return;
@@ -368,12 +384,14 @@ EXEMPLES:
     mdpdf document.md --template qualiopi # Utiliser un template spécifique
     mdpdf document.md --no-header        # Sans header
     mdpdf document.md --no-footer        # Sans footer
+    mdpdf document.md --landscape        # Orientation paysage
     mdpdf document.md --no-header --no-footer # Sans header ni footer
 
 OPTIONS:
     --template <nom>                     # Utiliser un template spécifique (défaut: default)
     --no-header                          # Désactiver le header
     --no-footer                          # Désactiver le footer
+    --landscape                          # Orientation paysage (défaut: portrait)
     --list-templates                     # Lister les templates disponibles
     --help, -h                           # Afficher cette aide
 

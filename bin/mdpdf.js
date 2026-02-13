@@ -465,6 +465,17 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
             right: '25mm'
         };
 
+        // Saut de page sur les <hr> (balise --- en Markdown)
+        cssContent += `
+hr {
+    page-break-after: always;
+    border: none;
+    margin: 0;
+    padding: 0;
+    height: 0;
+}
+`;
+
         // Configuration de la page selon l'orientation
         // A4 Portrait : 210mm x 297mm
         // A4 Paysage : 297mm x 210mm

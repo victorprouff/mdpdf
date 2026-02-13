@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { glob } from 'glob';
 import matter from 'gray-matter';
+import { marked } from 'marked';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -113,6 +114,70 @@ function processImages(markdownContent, baseDir) {
     });
 }
 
+// Fonction pour transformer les GitHub-style alerts en HTML
+function processAlerts(markdownContent) {
+    const alertTypes = {
+        NOTE:      { className: 'note',      title: 'Note',      icon: 'ℹ️' },
+        TIP:       { className: 'tip',       title: 'Tip',       icon: '💡' },
+        IMPORTANT: { className: 'important', title: 'Important', icon: '❗' },
+        WARNING:   { className: 'warning',   title: 'Warning',   icon: '⚠️' },
+        CAUTION:   { className: 'caution',   title: 'Caution',   icon: '🔴' },
+        INFO:      { className: 'note',      title: 'Info',      icon: 'ℹ️' },
+        DANGER:    { className: 'caution',   title: 'Danger',    icon: '🔴' },
+    };
+
+    const typePattern = Object.keys(alertTypes).join('|');
+    // Capture: [!TYPE] + texte optionnel sur la même ligne + corps du blockquote
+    const alertRegex = new RegExp(
+        `^(?:> *\\[!(${typePattern})\\]([^\\n]*)\\n)((?:> *[^\\n]*\\n?)*)`,
+        'gmi'
+    );
+
+    return markdownContent.replace(alertRegex, (match, type, titleSuffix, body) => {
+        const alertDef = alertTypes[type.toUpperCase()];
+        if (!alertDef) return match;
+
+        // Titre personnalisé après [!TYPE] ou titre par défaut
+        const customTitle = titleSuffix.trim();
+        const title = customTitle
+            ? marked.parseInline(customTitle)
+            : alertDef.title;
+
+        // Strip leading "> " from each line
+        const contentLines = body
+            .split('\n')
+            .filter(line => line.trim() !== '')
+            .map(line => line.replace(/^> ?/, '').trim());
+
+        // Group lines into paragraphs (empty lines = séparateurs)
+        const paragraphs = [];
+        let current = [];
+        for (const line of contentLines) {
+            if (line === '') {
+                if (current.length > 0) {
+                    paragraphs.push(current.join(' '));
+                    current = [];
+                }
+            } else {
+                current.push(line);
+            }
+        }
+        if (current.length > 0) {
+            paragraphs.push(current.join(' '));
+        }
+
+        // Traiter le markdown inline dans chaque paragraphe
+        const htmlBody = paragraphs
+            .map(p => `  <p>${marked.parseInline(p)}</p>`)
+            .join('\n');
+
+        return `<div class="markdown-alert markdown-alert-${alertDef.className}">
+  <p class="markdown-alert-title">${alertDef.icon} ${title}</p>
+${htmlBody}
+</div>\n`;
+    });
+}
+
 // Fonction pour obtenir le CSS par défaut
 function getDefaultCSS() {
     return `
@@ -206,6 +271,55 @@ h1, h2, h3 {
 p, li {
     page-break-inside: avoid;
 }
+
+/* === GitHub-style Alerts === */
+.markdown-alert {
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-left: 4px solid;
+    border-radius: 4px;
+    page-break-inside: avoid;
+}
+
+.markdown-alert p {
+    margin: 4px 0;
+    text-align: left;
+}
+
+.markdown-alert-title {
+    font-weight: 600;
+    margin-bottom: 4px !important;
+}
+
+.markdown-alert-note {
+    border-left-color: #0969da;
+    background-color: #ddf4ff;
+}
+.markdown-alert-note .markdown-alert-title { color: #0969da; }
+
+.markdown-alert-tip {
+    border-left-color: #1a7f37;
+    background-color: #dafbe1;
+}
+.markdown-alert-tip .markdown-alert-title { color: #1a7f37; }
+
+.markdown-alert-important {
+    border-left-color: #8250df;
+    background-color: #eddeff;
+}
+.markdown-alert-important .markdown-alert-title { color: #8250df; }
+
+.markdown-alert-warning {
+    border-left-color: #9a6700;
+    background-color: #fff8c5;
+}
+.markdown-alert-warning .markdown-alert-title { color: #9a6700; }
+
+.markdown-alert-caution {
+    border-left-color: #cf222e;
+    background-color: #ffebe9;
+}
+.markdown-alert-caution .markdown-alert-title { color: #cf222e; }
 `;
 }
 
@@ -366,7 +480,8 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
         // Lire le contenu markdown et convertir les images locales en base64
         const rawContent = fs.readFileSync(mdFile, 'utf8');
         const { content: mdContent } = matter(rawContent);
-        const processedContent = processImages(mdContent, path.dirname(mdFile));
+        const imagesProcessed = processImages(mdContent, path.dirname(mdFile));
+        const processedContent = processAlerts(imagesProcessed);
 
         await mdToPdf(
             { content: processedContent },

@@ -127,6 +127,35 @@ défaut < front matter < CLI explicite
 
 **Exemple :** un fichier avec `header: show` dans le front matter, lancé avec `--no-header`, aura le header désactivé (la CLI gagne).
 
+## Alertes GitHub-style
+
+Les alertes sont des blockquotes spéciales qui produisent un encadré coloré dans le PDF.
+
+### Syntaxe
+
+```markdown
+> [!NOTE]
+> Contenu de la note.
+
+> [!WARNING] **Titre personnalisé**
+>
+> Contenu avec du **markdown** et du `code`.
+```
+
+### Types supportés
+
+| Syntaxe        | Couleur | Description           |
+| -------------- | ------- | --------------------- |
+| `[!NOTE]`      | Bleu    | Information générale  |
+| `[!TIP]`       | Vert    | Astuce                |
+| `[!IMPORTANT]` | Violet  | Point important       |
+| `[!WARNING]`   | Orange  | Avertissement         |
+| `[!CAUTION]`   | Rouge   | Danger                |
+| `[!INFO]`      | Bleu    | Alias de NOTE         |
+| `[!DANGER]`    | Rouge   | Alias de CAUTION      |
+
+Un titre personnalisé peut être ajouté après le type (ex: `> [!INFO] **Rappel**`). Le markdown inline (gras, italique, code, liens) est supporté dans le titre et le contenu.
+
 ## Exemple de template CSS
 
 ```css
@@ -166,6 +195,7 @@ th, td {
 - ✅ Orientation paysage/portrait
 - ✅ Front matter YAML pour configuration par fichier
 - ✅ Fusion intelligente des options (défaut < front matter < CLI)
+- ✅ GitHub-style Alerts (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`, `[!INFO]`, `[!DANGER]`)
 
 ## Todo :
 
@@ -183,7 +213,7 @@ th, td {
   - Si on indique un ou plusieurs fichier en particulier : il le ou les convertis en .pdf avec thème et propriété indiqué dans les paramètres du .md
   - Si paramètre indiqué, surcharge le paramètre indiqué dans fichier .md
   - Si aucun paramètre indiqué, prends valeur par défaut (thème default, portrait, sans logo etc.)
-- [ ] Améliorer rendu des citations [!INFO] [!WARNING] etc
+- [x] Améliorer rendu des citations [!INFO] [!WARNING] etc
 - [x] Extraire Header et Footer dans le thème pour pouvoir les configurer par thèmes
 
 ### Projet annexe : MdPdf Template Builder
@@ -263,3 +293,4 @@ npm unlink mdpdf
 - [md-to-pdf](https://www.npmjs.com/package/md-to-pdf) - Conversion Markdown vers PDF
 - [glob](https://www.npmjs.com/package/glob) - Recherche de fichiers
 - [gray-matter](https://www.npmjs.com/package/gray-matter) - Parsing du front matter YAML
+- [marked](https://www.npmjs.com/package/marked) - Rendu du markdown inline dans les alertes

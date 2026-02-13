@@ -114,6 +114,147 @@ function processImages(markdownContent, baseDir) {
     });
 }
 
+// Fonction pour générer un slug à partir d'un texte de heading (pour les ancres)
+function slugify(text) {
+    return text
+        .toLowerCase()
+        .replace(/<[^>]+>/g, '')       // Supprimer les balises HTML
+        .replace(/[^\w\s-]/g, '')      // Supprimer les caractères spéciaux
+        .replace(/\s+/g, '-')          // Espaces → tirets
+        .replace(/-+/g, '-')           // Tirets multiples → un seul
+        .replace(/^-|-$/g, '');        // Supprimer tirets en début/fin
+}
+
+// Fonction pour générer la table des matières et injecter les ancres dans le markdown
+function processToc(markdownContent, tocStart = 1, tocDepth = 3) {
+    // Vérifier si la balise [[toc]] est présente
+    if (!markdownContent.includes('[[toc]]')) {
+        return markdownContent;
+    }
+
+    // Parser les headings (en dehors des blocs de code)
+    const headings = [];
+    const slugCount = {};
+    let inCodeBlock = false;
+
+    const lines = markdownContent.split('\n');
+    for (const line of lines) {
+        // Détecter les blocs de code
+        if (line.trim().startsWith('```')) {
+            inCodeBlock = !inCodeBlock;
+            continue;
+        }
+        if (inCodeBlock) continue;
+
+        // Ignorer la ligne [[toc]] elle-même
+        if (line.trim() === '[[toc]]') continue;
+
+        const match = line.match(/^(#{1,6})\s+(.+)$/);
+        if (match) {
+            const level = match[1].length;
+            if (level < tocStart || level > tocDepth) continue;
+
+            const rawTitle = match[2].trim();
+            let slug = slugify(rawTitle);
+
+            // Gérer les doublons de slug
+            if (slugCount[slug] !== undefined) {
+                slugCount[slug]++;
+                slug = `${slug}-${slugCount[slug]}`;
+            } else {
+                slugCount[slug] = 0;
+            }
+
+            headings.push({ level, title: rawTitle, slug });
+        }
+    }
+
+    if (headings.length === 0) {
+        return markdownContent.replace(/\[\[toc\]\]/g, '');
+    }
+
+    // Générer le HTML du sommaire avec listes imbriquées
+    const minLevel = Math.min(...headings.map(h => h.level));
+    let tocBody = '';
+    let currentLevel = minLevel - 1;
+
+    for (const h of headings) {
+        const htmlTitle = marked.parseInline(h.title);
+
+        if (h.level > currentLevel) {
+            // Ouvrir des <ul> pour descendre au bon niveau
+            for (let i = currentLevel; i < h.level; i++) {
+                tocBody += '<ul>';
+            }
+        } else if (h.level < currentLevel) {
+            // Fermer les </li></ul> pour remonter au bon niveau
+            for (let i = currentLevel; i > h.level; i--) {
+                tocBody += '</li></ul>';
+            }
+            tocBody += '</li>';
+        } else {
+            tocBody += '</li>';
+        }
+
+        tocBody += `<li><a href="#${h.slug}">${htmlTitle}</a>`;
+        currentLevel = h.level;
+    }
+
+    // Fermer tous les niveaux restants
+    for (let i = currentLevel; i >= minLevel; i--) {
+        tocBody += '</li></ul>';
+    }
+
+    const tocHtml = `<nav class="toc">
+<h2 class="toc-title">Sommaire</h2>
+${tocBody}
+</nav>`;
+
+    // Remplacer [[toc]] par le HTML généré
+    let result = markdownContent.replace(/\[\[toc\]\]/g, tocHtml);
+
+    // Injecter des ancres <a> avant chaque heading concerné
+    inCodeBlock = false;
+    const slugCount2 = {};
+    const resultLines = result.split('\n');
+    const outputLines = [];
+
+    for (const line of resultLines) {
+        if (line.trim().startsWith('```')) {
+            inCodeBlock = !inCodeBlock;
+            outputLines.push(line);
+            continue;
+        }
+        if (inCodeBlock) {
+            outputLines.push(line);
+            continue;
+        }
+
+        const match = line.match(/^(#{1,6})\s+(.+)$/);
+        if (match) {
+            const level = match[1].length;
+            const rawTitle = match[2].trim();
+
+            if (level >= tocStart && level <= tocDepth) {
+                let slug = slugify(rawTitle);
+                if (slugCount2[slug] !== undefined) {
+                    slugCount2[slug]++;
+                    slug = `${slug}-${slugCount2[slug]}`;
+                } else {
+                    slugCount2[slug] = 0;
+                }
+
+                outputLines.push(`<a id="${slug}"></a>\n\n${line}`);
+                continue;
+            }
+        }
+
+        outputLines.push(line);
+    }
+
+    return outputLines.join('\n');
+}
+
 // Fonction pour transformer les GitHub-style alerts en HTML
 function processAlerts(markdownContent) {
     const alertTypes = {
@@ -320,6 +461,51 @@ p, li {
     background-color: #ffebe9;
 }
 .markdown-alert-caution .markdown-alert-title { color: #cf222e; }
+
+/* === Table des matières === */
+.toc {
+    background-color: #f8f9fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    padding: 16px 24px;
+    margin: 20px 0;
+    page-break-inside: avoid;
+}
+
+.toc-title {
+    font-size: 14pt;
+    color: #2C5F8D;
+    margin-top: 0;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #2C5F8D;
+    padding-bottom: 8px;
+}
+
+.toc > ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.toc ul ul {
+    list-style: none;
+    padding-left: 20px;
+    margin: 0;
+}
+
+.toc li {
+    margin: 4px 0;
+    line-height: 1.5;
+}
+
+.toc li a {
+    color: #333;
+    text-decoration: none;
+}
+
+.toc li a:hover {
+    text-decoration: underline;
+}
 `;
 }
 
@@ -347,6 +533,18 @@ function parseFrontMatter(mdFile) {
     }
     if (data.output !== undefined) {
         result.output = String(data.output);
+    }
+    if (data['toc-start'] !== undefined) {
+        const start = parseInt(data['toc-start'], 10);
+        if (start >= 1 && start <= 6) {
+            result['toc-start'] = start;
+        }
+    }
+    if (data['toc-depth'] !== undefined) {
+        const depth = parseInt(data['toc-depth'], 10);
+        if (depth >= 1 && depth <= 6) {
+            result['toc-depth'] = depth;
+        }
     }
 
     return result;
@@ -384,7 +582,9 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
         header: true,
         footer: true,
         logo: true,
-        landscape: false
+        landscape: false,
+        'toc-start': 1,
+        'toc-depth': 3
     };
 
     const frontMatter = parseFrontMatter(mdFile);
@@ -492,7 +692,8 @@ hr {
         const rawContent = fs.readFileSync(mdFile, 'utf8');
         const { content: mdContent } = matter(rawContent);
         const imagesProcessed = processImages(mdContent, path.dirname(mdFile));
-        const processedContent = processAlerts(imagesProcessed);
+        const tocProcessed = processToc(imagesProcessed, options['toc-start'], options['toc-depth']);
+        const processedContent = processAlerts(tocProcessed);
 
         await mdToPdf(
             { content: processedContent },
@@ -574,6 +775,24 @@ async function main() {
         } else if (args[i] === '--no-logo') {
             cliOptions.logo = false;
             cliExplicit.add('logo');
+        } else if (args[i] === '--toc-start' && args[i + 1]) {
+            const start = parseInt(args[i + 1], 10);
+            if (start >= 1 && start <= 6) {
+                cliOptions['toc-start'] = start;
+                cliExplicit.add('toc-start');
+            } else {
+                console.warn(`⚠️  toc-start doit être entre 1 et 6, ignoré : ${args[i + 1]}`);
+            }
+            i++;
+        } else if (args[i] === '--toc-depth' && args[i + 1]) {
+            const depth = parseInt(args[i + 1], 10);
+            if (depth >= 1 && depth <= 6) {
+                cliOptions['toc-depth'] = depth;
+                cliExplicit.add('toc-depth');
+            } else {
+                console.warn(`⚠️  toc-depth doit être entre 1 et 6, ignoré : ${args[i + 1]}`);
+            }
+            i++;
         } else if (args[i] === '--landscape') {
             cliOptions.landscape = true;
             cliExplicit.add('landscape');
@@ -643,6 +862,8 @@ OPTIONS:
     --no-header                          # Désactiver le header
     --no-footer                          # Désactiver le footer
     --no-logo                            # Désactiver le logo
+    --toc-start <n>                      # Niveau de titre minimum dans le sommaire, 1-6 (défaut: 1)
+    --toc-depth <n>                      # Niveau de titre maximum dans le sommaire, 1-6 (défaut: 3)
     --landscape                          # Orientation paysage (défaut: portrait)
     --output <fichier>                   # Chemin du fichier PDF de sortie
     --list-templates                     # Lister les templates disponibles
@@ -660,6 +881,8 @@ FRONT MATTER YAML:
     header: show
     footer: hidden
     logo: hidden
+    toc-start: 2
+    toc-depth: 4
     output: mon-document.pdf
     ---
 
@@ -669,6 +892,8 @@ FRONT MATTER YAML:
     - header      : show/hidden
     - footer      : show/hidden
     - logo        : show/hidden
+    - toc-start   : niveau min du sommaire, 1-6 (défaut: 1)
+    - toc-depth   : niveau max du sommaire, 1-6 (défaut: 3)
     - output      : chemin du PDF de sortie
 
     Priorité : défaut < front matter < CLI explicite

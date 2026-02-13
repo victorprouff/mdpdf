@@ -76,6 +76,8 @@ mdpdf document.md --no-header --no-footer
 | `--no-header`        | Désactiver le header                                |
 | `--no-footer`        | Désactiver le footer                                |
 | `--no-logo`          | Désactiver le logo                                  |
+| `--toc-start <n>`    | Niveau de titre minimum dans le sommaire, 1-6 (défaut: 1) |
+| `--toc-depth <n>`    | Niveau de titre maximum dans le sommaire, 1-6 (défaut: 3) |
 | `--landscape`        | Orientation paysage (défaut: portrait)              |
 | `--output <fichier>` | Chemin du fichier PDF de sortie                     |
 | `--list-templates`   | Lister les templates disponibles                    |
@@ -94,6 +96,8 @@ landscape: true
 header: show
 footer: hidden
 logo: hidden
+toc-start: 2
+toc-depth: 4
 output: mon-document.pdf
 ---
 
@@ -111,6 +115,8 @@ Contenu du document...
 | `header`    | string  | `show` / `hidden` | Afficher ou masquer le header |
 | `footer`    | string  | `show` / `hidden` | Afficher ou masquer le footer |
 | `logo`      | string  | `show` / `hidden` | Afficher ou masquer le logo   |
+| `toc-start` | number  | `1` - `6`         | Niveau de titre min du sommaire (défaut: 1) |
+| `toc-depth` | number  | `1` - `6`         | Niveau de titre max du sommaire (défaut: 3) |
 | `output`    | string  | chemin du fichier | Chemin du PDF de sortie       |
 
 ### Priorité de fusion
@@ -184,6 +190,48 @@ th, td {
 }
 ```
 
+## Table des matières
+
+Insérez la balise `[[toc]]` dans votre fichier Markdown pour générer automatiquement un sommaire à cet emplacement.
+
+### Syntaxe
+
+```markdown
+# Mon document
+
+[[toc]]
+
+## Première section
+### Sous-section 1.1
+## Deuxième section
+### Sous-section 2.1
+```
+
+Le sommaire est généré avec des liens cliquables vers chaque section. Il s'affiche dans un encadré stylisé avec indentation par niveau.
+
+### Configuration de la profondeur
+
+Par défaut, le sommaire inclut les niveaux h1 à h3. Vous pouvez ajuster la plage avec `toc-start` (niveau minimum) et `toc-depth` (niveau maximum).
+
+**Exemples :**
+
+```markdown
+---
+toc-start: 2
+toc-depth: 4
+---
+```
+
+Cela génère un sommaire contenant les h2, h3 et h4 (le h1 est exclu).
+
+Depuis la CLI :
+
+```bash
+mdpdf document.md --toc-start 2 --toc-depth 4
+```
+
+Si la balise `[[toc]]` n'est pas présente dans le fichier, aucun sommaire n'est généré.
+
 ## Saut de page
 
 Utilisez la balise `---` (ligne horizontale Markdown) pour forcer un saut de page dans le PDF.
@@ -212,6 +260,7 @@ Contenu de la deuxième section...
 - ✅ Front matter YAML pour configuration par fichier
 - ✅ Fusion intelligente des options (défaut < front matter < CLI)
 - ✅ GitHub-style Alerts (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`, `[!INFO]`, `[!DANGER]`)
+- ✅ Table des matières avec `[[toc]]` (profondeur configurable)
 - ✅ Saut de page avec `---`
 
 ## Structure du PDF

@@ -76,6 +76,43 @@ function loadHTMLTemplate(templatePath, variables) {
     return content;
 }
 
+// Fonction pour convertir les images locales en base64 data URI dans le markdown
+function processImages(markdownContent, baseDir) {
+    const mimeTypes = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml',
+        '.webp': 'image/webp',
+        '.bmp': 'image/bmp',
+        '.ico': 'image/x-icon'
+    };
+
+    // Remplacer les images markdown : ![alt](path) ou ![alt](path "title")
+    return markdownContent.replace(/!\[([^\]]*)\]\(([^)"]+)(?:\s+"[^"]*")?\)/g, (match, alt, imgPath) => {
+        // Ignorer les URLs et data URIs
+        if (imgPath.startsWith('http://') || imgPath.startsWith('https://') || imgPath.startsWith('data:')) {
+            return match;
+        }
+
+        const absolutePath = path.resolve(baseDir, imgPath);
+
+        if (!fs.existsSync(absolutePath)) {
+            console.warn(`⚠️  Image non trouvée : ${imgPath}`);
+            return match;
+        }
+
+        const ext = path.extname(absolutePath).toLowerCase();
+        const mime = mimeTypes[ext] || 'application/octet-stream';
+        const base64 = fs.readFileSync(absolutePath, { encoding: 'base64' });
+        const dataUri = `data:${mime};base64,${base64}`;
+
+        console.log(`🖼️  Image embarquée : ${imgPath}`);
+        return `![${alt}](${dataUri})`;
+    });
+}
+
 // Fonction pour obtenir le CSS par défaut
 function getDefaultCSS() {
     return `
@@ -304,7 +341,7 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
     console.log(`📅 Date : ${today}`);
     console.log(`📤 Sortie : ${outputPath}`);
     console.log(`🚀 Lancement de la génération PDF...\n`);
-        
+
     try {
         // Calculer les marges en fonction de header/footer
         const margins = {
@@ -313,7 +350,7 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
             left: '25mm',
             right: '25mm'
         };
-        
+
         // Configuration de la page selon l'orientation
         // A4 Portrait : 210mm x 297mm
         // A4 Paysage : 297mm x 210mm
@@ -326,10 +363,16 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
     `;
         }
 
+        // Lire le contenu markdown et convertir les images locales en base64
+        const rawContent = fs.readFileSync(mdFile, 'utf8');
+        const { content: mdContent } = matter(rawContent);
+        const processedContent = processImages(mdContent, path.dirname(mdFile));
+
         await mdToPdf(
-            { path: mdFile },
+            { content: processedContent },
             {
                 dest: outputPath,
+                basedir: path.dirname(mdFile),
                 css: cssContent,
                 pdf_options: {
                     format: 'A4',

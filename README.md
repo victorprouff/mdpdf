@@ -26,6 +26,7 @@ cp template.css ~/.mdpdf/
 ```
 
 **Fichiers nécessaires :**
+
 - `logo.png` : Votre logo (format PNG recommandé)
 - `template.css` : Votre feuille de style personnalisée
 
@@ -69,16 +70,16 @@ mdpdf document.md --no-header --no-footer
 
 ## Options
 
-| Option | Description |
-|--------|-------------|
-| `--template <nom>` | Utiliser un template spécifique (défaut: `default`) |
-| `--no-header` | Désactiver le header |
-| `--no-footer` | Désactiver le footer |
-| `--no-logo` | Désactiver le logo |
-| `--landscape` | Orientation paysage (défaut: portrait) |
-| `--output <fichier>` | Chemin du fichier PDF de sortie |
-| `--list-templates` | Lister les templates disponibles |
-| `--help`, `-h` | Afficher l'aide |
+| Option               | Description                                         |
+| -------------------- | --------------------------------------------------- |
+| `--template <nom>`   | Utiliser un template spécifique (défaut: `default`) |
+| `--no-header`        | Désactiver le header                                |
+| `--no-footer`        | Désactiver le footer                                |
+| `--no-logo`          | Désactiver le logo                                  |
+| `--landscape`        | Orientation paysage (défaut: portrait)              |
+| `--output <fichier>` | Chemin du fichier PDF de sortie                     |
+| `--list-templates`   | Lister les templates disponibles                    |
+| `--help`, `-h`       | Afficher l'aide                                     |
 
 ## Front Matter YAML
 
@@ -103,14 +104,14 @@ Contenu du document...
 
 ### Clés supportées
 
-| Clé | Type | Valeurs | Description |
-|-----|------|---------|-------------|
-| `template` | string | nom du template | Template à utiliser |
-| `landscape` | boolean | `true` / `false` | Orientation paysage |
-| `header` | string | `show` / `hidden` | Afficher ou masquer le header |
-| `footer` | string | `show` / `hidden` | Afficher ou masquer le footer |
-| `logo` | string | `show` / `hidden` | Afficher ou masquer le logo |
-| `output` | string | chemin du fichier | Chemin du PDF de sortie |
+| Clé         | Type    | Valeurs           | Description                   |
+| ----------- | ------- | ----------------- | ----------------------------- |
+| `template`  | string  | nom du template   | Template à utiliser           |
+| `landscape` | boolean | `true` / `false`  | Orientation paysage           |
+| `header`    | string  | `show` / `hidden` | Afficher ou masquer le header |
+| `footer`    | string  | `show` / `hidden` | Afficher ou masquer le footer |
+| `logo`      | string  | `show` / `hidden` | Afficher ou masquer le logo   |
+| `output`    | string  | chemin du fichier | Chemin du PDF de sortie       |
 
 ### Priorité de fusion
 
@@ -177,17 +178,20 @@ th, td {
 - [x] Gérer l'orientation (paysage/portrait)
 - [x] Ajouter des propriétés dans le markdown pour indiquer le theme, l'orientation, faire disparaitre ou apparaitre header, footer, logo (pour gérer des cas particulier)
 - [x] Du coup nouveau comportement :
-    - Si on n'indique aucun paramètre : Il export tous les fichiers .md du dossier courant en .pdf avec theme indiqué dans les paramètres du .md
-    - Si on indique un ou plusieurs fichier en particulier : il le ou les convertis en .pdf avec thème et propriété indiqué dans les paramètres du .md
-    - Si paramètre indiqué, surcharge le paramètre indiqué dans fichier .md
-    - Si aucun paramètre indiqué, prends valeur par défaut (thème default, portrait, sans logo etc.)
+
+  - Si on n'indique aucun paramètre : Il export tous les fichiers .md du dossier courant en .pdf avec theme indiqué dans les paramètres du .md
+  - Si on indique un ou plusieurs fichier en particulier : il le ou les convertis en .pdf avec thème et propriété indiqué dans les paramètres du .md
+  - Si paramètre indiqué, surcharge le paramètre indiqué dans fichier .md
+  - Si aucun paramètre indiqué, prends valeur par défaut (thème default, portrait, sans logo etc.)
 - [ ] Améliorer rendu des citations [!INFO] [!WARNING] etc
 - [x] Extraire Header et Footer dans le thème pour pouvoir les configurer par thèmes
 
 ### Projet annexe : MdPdf Template Builder
+
 - [ ] Visualiser le rendu live de ce que donne un template donné à partir d'un .md d'exemple comprenant tous types de balise md
-    - Respecter le format de la page (A4) et le style CSS
-    - Chaque modification dans le css doit être appliqué en live
+
+  - Respecter le format de la page (A4) et le style CSS
+  - Chaque modification dans le css doit être appliqué en live
 - [ ] Rajouter un panneau à gauche avec les titres avec possibilité de changer la taille, la couleur et le centrage qui s'applique au fichier css et au rendu de droite en live
 - [ ] Activer/désactiver la présence des header/footer
 - [ ] Pouvoir custom le header/footer en les divisants en 3 parties : droite, centre, gauche, ajouter une image, sa position, marge au bord, texte, taille de texte à chaque partie, italique, gras, pouvoir rajouter des infos normée (nom du doc, numéro de page (format : X ou X/Y ou Page : X), date, etc)
@@ -215,6 +219,7 @@ mon-template/
 ```
 
 Les templates sont cherchés dans cet ordre :
+
 1. `~/.mdpdf/templates/<nom>/` (templates utilisateur)
 2. `./templates/<nom>/` (templates du projet)
 
@@ -224,6 +229,7 @@ Pour créer un nouveau template :
 mkdir -p ~/.mdpdf/templates/mon-template
 # Puis ajoutez vos fichiers header.html, footer.html, template.css, logo.png
 ```
+
 ## Mise à jour
 
 Pour toute mise à jour, il faut désinstaller le projet via le commande :
@@ -233,9 +239,11 @@ npm unlink mdpdf
 ```
 
 Puis réinstallé le projet avec la commande :
+
 ```bash
 npm link mdpdf
 ```
+
 ### Pour plus de simplicité, j'ai rajouté le raccourcis dans ma configuration zsh
 
 ```bash

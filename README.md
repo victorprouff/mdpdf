@@ -184,6 +184,22 @@ th, td {
 }
 ```
 
+## Saut de page
+
+Utilisez la balise `---` (ligne horizontale Markdown) pour forcer un saut de page dans le PDF.
+
+```markdown
+# Première section
+
+Contenu de la première section...
+
+---
+
+# Deuxième section (nouvelle page)
+
+Contenu de la deuxième section...
+```
+
 ## Fonctionnalités
 
 - ✅ Header avec logo et date
@@ -196,39 +212,7 @@ th, td {
 - ✅ Front matter YAML pour configuration par fichier
 - ✅ Fusion intelligente des options (défaut < front matter < CLI)
 - ✅ GitHub-style Alerts (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`, `[!INFO]`, `[!DANGER]`)
-
-## Todo :
-
-- [x] Rajouter un repo pour les templates (~/.mdpdf)
-- [x] Rajouter dans ce répertoire un dossier themes contenant pour chaque thème un répertoire
-    - [x] Formation (actuel)
-    - [x] Default
-    - [ ] Formation-Uneeti (actuel)
-- [x] Pouvoir choisir le thème via un paramètre --template formation
-- [x] Gérer l'orientation (paysage/portrait)
-- [x] Ajouter des propriétés dans le markdown pour indiquer le theme, l'orientation, faire disparaitre ou apparaitre header, footer, logo (pour gérer des cas particulier)
-- [x] Du coup nouveau comportement :
-
-  - Si on n'indique aucun paramètre : Il export tous les fichiers .md du dossier courant en .pdf avec theme indiqué dans les paramètres du .md
-  - Si on indique un ou plusieurs fichier en particulier : il le ou les convertis en .pdf avec thème et propriété indiqué dans les paramètres du .md
-  - Si paramètre indiqué, surcharge le paramètre indiqué dans fichier .md
-  - Si aucun paramètre indiqué, prends valeur par défaut (thème default, portrait, sans logo etc.)
-- [x] Améliorer rendu des citations [!INFO] [!WARNING] etc
-- [x] Extraire Header et Footer dans le thème pour pouvoir les configurer par thèmes
-
-### Projet annexe : MdPdf Template Builder
-
-- [ ] Visualiser le rendu live de ce que donne un template donné à partir d'un .md d'exemple comprenant tous types de balise md
-
-  - Respecter le format de la page (A4) et le style CSS
-  - Chaque modification dans le css doit être appliqué en live
-- [ ] Rajouter un panneau à gauche avec les titres avec possibilité de changer la taille, la couleur et le centrage qui s'applique au fichier css et au rendu de droite en live
-- [ ] Activer/désactiver la présence des header/footer
-- [ ] Pouvoir custom le header/footer en les divisants en 3 parties : droite, centre, gauche, ajouter une image, sa position, marge au bord, texte, taille de texte à chaque partie, italique, gras, pouvoir rajouter des infos normée (nom du doc, numéro de page (format : X ou X/Y ou Page : X), date, etc)
-- [ ] Style de texte dans le body (taille, couleur etc)
-- [ ] Format doc (A4), taille des marges
-- [ ] Activer ou non le sommaire, modifier son style
-- [ ] ...
+- ✅ Saut de page avec `---`
 
 ## Structure du PDF
 

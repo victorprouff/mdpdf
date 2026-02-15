@@ -572,6 +572,25 @@ function mergeOptions(defaults, frontMatter, cliOptions, cliExplicit) {
     return result;
 }
 
+// Extraire les marges depuis la règle @page du CSS
+function extractPageMargins(css) {
+    const defaults = { top: '25mm', bottom: '20mm', left: '15mm', right: '15mm' };
+    const pageMatch = css.match(/@page\s*\{([^}]*)\}/);
+    if (!pageMatch) return defaults;
+
+    const body = pageMatch[1];
+    const sides = ['top', 'right', 'bottom', 'left'];
+    const result = { ...defaults };
+
+    sides.forEach(side => {
+        const re = new RegExp(`margin-${side}\\s*:\\s*([\\d.]+\\s*(?:mm|cm|px|in|pt))`, 'i');
+        const m = body.match(re);
+        if (m) result[side] = m[1].replace(/\s+/g, '');
+    });
+
+    return result;
+}
+
 // Fonction pour générer un PDF
 async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
     const today = formatDate();
@@ -657,13 +676,8 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
     console.log(`🚀 Lancement de la génération PDF...\n`);
 
     try {
-        // Calculer les marges en fonction de header/footer
-        const margins = {
-            top: options.header !== false ? '100px' : '25mm',
-            bottom: options.footer !== false ? '120px' : '25mm',
-            left: '25mm',
-            right: '25mm'
-        };
+        // Extraire les marges depuis @page dans le CSS du template
+        const margins = extractPageMargins(cssContent);
 
         // Saut de page sur les <hr> (balise --- en Markdown)
         cssContent += `
@@ -704,6 +718,7 @@ hr {
                 pdf_options: {
                     format: 'A4',
                     landscape: options.landscape || false,
+                    margin: margins,
                     displayHeaderFooter: (options.header !== false || options.footer !== false),
                     headerTemplate: headerTemplate,
                     footerTemplate: footerTemplate,

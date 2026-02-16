@@ -248,6 +248,28 @@ Contenu de la première section...
 Contenu de la deuxième section...
 ```
 
+## Images
+
+Les images sont automatiquement centrées dans le PDF. Les images locales sont embarquées en base64.
+
+### Redimensionnement (format Obsidian)
+
+Utilisez un nombre comme texte alternatif pour définir la largeur en pixels, compatible avec la syntaxe Obsidian :
+
+```markdown
+![500](./schema.png)
+```
+
+L'image sera centrée et affichée avec une largeur de 500px.
+
+### Exemples
+
+| Markdown | Résultat |
+| --- | --- |
+| `![500](./img.png)` | Centrée, largeur 500px |
+| `![Mon schéma](./img.png)` | Centrée, taille naturelle, alt="Mon schéma" |
+| `![](./img.png)` | Centrée, taille naturelle |
+
 ## Fonctionnalités
 
 - ✅ Header avec logo et date
@@ -262,6 +284,7 @@ Contenu de la deuxième section...
 - ✅ GitHub-style Alerts (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`, `[!INFO]`, `[!DANGER]`)
 - ✅ Table des matières avec `[[toc]]` (profondeur configurable)
 - ✅ Saut de page avec `---`
+- ✅ Images centrées avec redimensionnement Obsidian (`![largeur](path)`)
 
 ## Structure du PDF
 

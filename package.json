@@ -7,7 +7,7 @@
     "mdpdf": "./bin/mdpdf.js"
   },
   "dependencies": {
-    "glob": "^13.0.1",
+    "glob": "^13.0.3",
     "gray-matter": "^4.0.3",
     "marked": "^17.0.2",
     "md-to-pdf": "^5.2.5"

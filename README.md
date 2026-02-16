@@ -262,11 +262,22 @@ Utilisez un nombre comme texte alternatif pour définir la largeur en pixels, co
 
 L'image sera centrée et affichée avec une largeur de 500px.
 
+### Alt text avec largeur
+
+Vous pouvez combiner un texte alternatif et une largeur avec la syntaxe `alt|largeur` :
+
+```markdown
+![Mon schéma|500](./schema.png)
+```
+
+L'image sera centrée, affichée avec une largeur de 500px et `alt="Mon schéma"`.
+
 ### Exemples
 
 | Markdown | Résultat |
 | --- | --- |
 | `![500](./img.png)` | Centrée, largeur 500px |
+| `![Mon schéma\|500](./img.png)` | Centrée, largeur 500px, alt="Mon schéma" |
 | `![Mon schéma](./img.png)` | Centrée, taille naturelle, alt="Mon schéma" |
 | `![](./img.png)` | Centrée, taille naturelle |
 

@@ -90,14 +90,26 @@ function processImages(markdownContent, baseDir) {
         '.ico': 'image/x-icon'
     };
 
+    // Parse le alt Obsidian : "alt|width", "width", ou "alt"
+    function parseAlt(raw) {
+        const pipeMatch = raw.match(/^(.+)\|(\d+)$/);
+        if (pipeMatch) return { alt: pipeMatch[1], width: pipeMatch[2] };
+        if (/^\d+$/.test(raw)) return { alt: '', width: raw };
+        return { alt: raw, width: null };
+    }
+
+    function buildImgTag(src, rawAlt) {
+        const { alt, width } = parseAlt(rawAlt);
+        const altAttr = alt ? ` alt="${alt}"` : '';
+        const widthAttr = width ? ` width="${width}"` : '';
+        return `<div style="text-align:center"><img src="${src}"${altAttr}${widthAttr}></div>`;
+    }
+
     // Remplacer les images markdown : ![alt](path) ou ![alt](path "title")
     return markdownContent.replace(/!\[([^\]]*)\]\(([^)"]+)(?:\s+"[^"]*")?\)/g, (match, alt, imgPath) => {
         // URLs et data URIs : centrer et appliquer la largeur Obsidian, mais pas de conversion base64
         if (imgPath.startsWith('http://') || imgPath.startsWith('https://') || imgPath.startsWith('data:')) {
-            const isWidth = /^\d+$/.test(alt);
-            const widthAttr = isWidth ? ` width="${alt}"` : '';
-            const altAttr = isWidth ? '' : ` alt="${alt}"`;
-            return `<div style="text-align:center"><img src="${imgPath}"${altAttr}${widthAttr}></div>`;
+            return buildImgTag(imgPath, alt);
         }
 
         const absolutePath = path.resolve(baseDir, imgPath);
@@ -113,12 +125,7 @@ function processImages(markdownContent, baseDir) {
         const dataUri = `data:${mime};base64,${base64}`;
 
         console.log(`🖼️  Image embarquée : ${imgPath}`);
-
-        // Format Obsidian : ![width](path) — alt est un nombre = largeur en pixels
-        const isWidth = /^\d+$/.test(alt);
-        const widthAttr = isWidth ? ` width="${alt}"` : '';
-        const altAttr = isWidth ? '' : ` alt="${alt}"`;
-        return `<div style="text-align:center"><img src="${dataUri}"${altAttr}${widthAttr}></div>`;
+        return buildImgTag(dataUri, alt);
     });
 }
 

@@ -561,6 +561,13 @@ function parseFrontMatter(mdFile) {
             result['toc-depth'] = depth;
         }
     }
+    if (data['page-break-before'] !== undefined) {
+        const raw = String(data['page-break-before']);
+        const levels = raw.split(',').map(s => parseInt(s.trim(), 10)).filter(n => n >= 1 && n <= 6);
+        if (levels.length > 0) {
+            result['page-break-before'] = levels.join(',');
+        }
+    }
 
     return result;
 }
@@ -618,7 +625,8 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
         logo: true,
         landscape: false,
         'toc-start': 1,
-        'toc-depth': 3
+        'toc-depth': 3,
+        'page-break-before': ''
     };
 
     const frontMatter = parseFrontMatter(mdFile);
@@ -704,6 +712,20 @@ hr {
     height: 0;
 }
 `;
+
+        // Saut de page avant les titres selon les niveaux configurés
+        if (options['page-break-before']) {
+            const levels = String(options['page-break-before']).split(',').map(s => parseInt(s.trim(), 10)).filter(n => n >= 1 && n <= 6);
+            if (levels.length > 0) {
+                const selectors = levels.map(n => `h${n}`);
+                cssContent += `
+${selectors.join(', ')} {
+    page-break-before: always;
+}
+`;
+                console.log(`📐 Saut de page avant les titres : ${selectors.join(', ')}`);
+            }
+        }
 
         // Configuration de la page selon l'orientation
         // A4 Portrait : 210mm x 297mm
@@ -823,6 +845,15 @@ async function main() {
                 console.warn(`⚠️  toc-depth doit être entre 1 et 6, ignoré : ${args[i + 1]}`);
             }
             i++;
+        } else if (args[i] === '--page-break-before' && args[i + 1]) {
+            const levels = args[i + 1].split(',').map(s => parseInt(s.trim(), 10)).filter(n => n >= 1 && n <= 6);
+            if (levels.length > 0) {
+                cliOptions['page-break-before'] = levels.join(',');
+                cliExplicit.add('page-break-before');
+            } else {
+                console.warn(`⚠️  page-break-before : valeurs invalides, ignoré : ${args[i + 1]}`);
+            }
+            i++;
         } else if (args[i] === '--landscape') {
             cliOptions.landscape = true;
             cliExplicit.add('landscape');
@@ -894,6 +925,7 @@ OPTIONS:
     --no-logo                            # Désactiver le logo
     --toc-start <n>                      # Niveau de titre minimum dans le sommaire, 1-6 (défaut: 1)
     --toc-depth <n>                      # Niveau de titre maximum dans le sommaire, 1-6 (défaut: 3)
+    --page-break-before <n,n,...>        # Saut de page avant les titres des niveaux listés (ex: 1,2)
     --landscape                          # Orientation paysage (défaut: portrait)
     --output <fichier>                   # Chemin du fichier PDF de sortie
     --list-templates                     # Lister les templates disponibles
@@ -913,6 +945,7 @@ FRONT MATTER YAML:
     logo: hidden
     toc-start: 2
     toc-depth: 4
+    page-break-before: 2
     output: mon-document.pdf
     ---
 
@@ -924,6 +957,7 @@ FRONT MATTER YAML:
     - logo        : show/hidden
     - toc-start   : niveau min du sommaire, 1-6 (défaut: 1)
     - toc-depth   : niveau max du sommaire, 1-6 (défaut: 3)
+    - page-break-before : saut de page avant les titres des niveaux listés (ex: 1,2)
     - output      : chemin du PDF de sortie
 
     Priorité : défaut < front matter < CLI explicite

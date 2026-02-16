@@ -98,6 +98,7 @@ footer: hidden
 logo: hidden
 toc-start: 2
 toc-depth: 4
+page-break-before: 2
 output: mon-document.pdf
 ---
 
@@ -117,6 +118,7 @@ Contenu du document...
 | `logo`      | string  | `show` / `hidden` | Afficher ou masquer le logo   |
 | `toc-start` | number  | `1` - `6`         | Niveau de titre min du sommaire (défaut: 1) |
 | `toc-depth` | number  | `1` - `6`         | Niveau de titre max du sommaire (défaut: 3) |
+| `page-break-before` | string  | `1,3`         | Saut de page avant les titres des niveaux listés (ex: 1,3) |
 | `output`    | string  | chemin du fichier | Chemin du PDF de sortie       |
 
 ### Priorité de fusion

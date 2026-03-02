@@ -234,9 +234,12 @@ mdpdf document.md --toc-start 2 --toc-depth 4
 
 Si la balise `[[toc]]` n'est pas présente dans le fichier, aucun sommaire n'est généré.
 
-## Saut de page
+## Séparateur et saut de page
 
-Utilisez la balise `---` (ligne horizontale Markdown) pour forcer un saut de page dans le PDF.
+| Syntaxe | Résultat |
+| ------- | -------- |
+| `---`   | Séparateur visuel (ligne horizontale) |
+| `===`   | Saut de page |
 
 ```markdown
 # Première section
@@ -245,10 +248,16 @@ Contenu de la première section...
 
 ---
 
+Suite de la même page, avec un séparateur visuel au-dessus.
+
+===
+
 # Deuxième section (nouvelle page)
 
 Contenu de la deuxième section...
 ```
+
+> **Note :** La ligne `===` doit être précédée d'une ligne vide pour être interprétée comme saut de page (et non comme un titre de niveau 1 en syntaxe setext Markdown).
 
 ## Images
 
@@ -296,7 +305,7 @@ L'image sera centrée, affichée avec une largeur de 500px et `alt="Mon schéma"
 - ✅ Fusion intelligente des options (défaut < front matter < CLI)
 - ✅ GitHub-style Alerts (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`, `[!INFO]`, `[!DANGER]`)
 - ✅ Table des matières avec `[[toc]]` (profondeur configurable)
-- ✅ Saut de page avec `---`
+- ✅ Séparateur visuel avec `---`, saut de page avec `===`
 - ✅ Images centrées avec redimensionnement Obsidian (`![largeur](path)`)
 
 ## Structure du PDF

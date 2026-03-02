@@ -270,6 +270,36 @@ ${tocBody}
     return outputLines.join('\n');
 }
 
+// Fonction pour transformer les lignes === en saut de page HTML
+function processPageBreaks(markdownContent) {
+    const lines = markdownContent.split('\n');
+    const result = [];
+    let inCodeBlock = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        if (line.trim().startsWith('```')) {
+            inCodeBlock = !inCodeBlock;
+            result.push(line);
+            continue;
+        }
+
+        // Ligne de === standalone (pas précédée de texte → pas un setext heading)
+        if (!inCodeBlock && /^={3,}\s*$/.test(line)) {
+            const prevLine = i > 0 ? lines[i - 1].trim() : '';
+            if (prevLine === '') {
+                result.push('<div class="page-break"></div>');
+                continue;
+            }
+        }
+
+        result.push(line);
+    }
+
+    return result.join('\n');
+}
+
 // Fonction pour transformer les GitHub-style alerts en HTML
 function processAlerts(markdownContent) {
     const alertTypes = {
@@ -703,14 +733,18 @@ async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
         // Extraire les marges depuis @page dans le CSS du template
         const margins = extractPageMargins(cssContent);
 
-        // Saut de page sur les <hr> (balise --- en Markdown)
+        // --- devient un séparateur visuel, === devient un saut de page
         cssContent += `
 hr {
-    page-break-after: always;
     border: none;
+    border-top: 1px solid #ccc;
+    margin: 20px 0;
+}
+.page-break {
+    page-break-after: always;
+    height: 0;
     margin: 0;
     padding: 0;
-    height: 0;
 }
 `;
 
@@ -744,7 +778,8 @@ ${selectors.join(', ')} {
         const rawContent = fs.readFileSync(mdFile, 'utf8');
         const { content: mdContent } = matter(rawContent);
         const imagesProcessed = processImages(mdContent, path.dirname(mdFile));
-        const tocProcessed = processToc(imagesProcessed, options['toc-start'], options['toc-depth']);
+        const pageBreaksProcessed = processPageBreaks(imagesProcessed);
+        const tocProcessed = processToc(pageBreaksProcessed, options['toc-start'], options['toc-depth']);
         const processedContent = processAlerts(tocProcessed);
 
         await mdToPdf(

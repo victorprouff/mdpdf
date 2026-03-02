@@ -338,6 +338,284 @@ mkdir -p ~/.mdpdf/templates/mon-template
 # Puis ajoutez vos fichiers header.html, footer.html, template.css, logo.png
 ```
 
+## Référence CSS des templates
+
+Le fichier `template.css` d'un template peut surcharger tous les sélecteurs ci-dessous. Le CSS du template est chargé **après** le CSS interne de `md-to-pdf`, donc vos règles ont priorité.
+
+> **Note :** `md-to-pdf` injecte son propre `markdown.css` avec `table { display: block; width: 100% }`. Pour que les tableaux soient correctement centrés, déclarez toujours `display: table; width: auto` dans votre template.
+
+---
+
+### `@page` — mise en page
+
+```css
+@page {
+    size: A4;                  /* A4, A5, Letter, ou dimensions explicites */
+    margin-top: 25mm;
+    margin-bottom: 20mm;
+    margin-left: 15mm;
+    margin-right: 15mm;
+}
+```
+
+Les marges définies ici sont lues par `mdpdf` pour calculer l'espace réservé au header et footer Puppeteer. Si cette règle est absente, les valeurs par défaut sont appliquées (`25mm / 20mm / 15mm / 15mm`).
+
+---
+
+### Éléments de base
+
+| Sélecteur | Ce qu'il cible |
+| --------- | -------------- |
+| `body` | Corps du document (police, taille, couleur, interligne) |
+| `h1` … `h6` | Titres de niveau 1 à 6 |
+| `p` | Paragraphes |
+| `a` | Liens hypertextes |
+| `strong` | Texte en gras |
+| `em` | Texte en italique |
+| `hr` | Séparateur horizontal (`---` en Markdown) |
+
+```css
+body {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #333;
+}
+
+h1 { color: #2C5F8D; font-size: 24pt; }
+h2 { color: #2C5F8D; font-size: 18pt; }
+h3 { color: #4A90E2; font-size: 14pt; }
+
+a {
+    color: #153644;
+    text-decoration: underline;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 20px 0;
+}
+```
+
+---
+
+### Listes
+
+| Sélecteur | Ce qu'il cible |
+| --------- | -------------- |
+| `ul`, `ol` | Listes non-ordonnées / ordonnées |
+| `li` | Élément de liste (tous niveaux) |
+| `ul > li` | Élément de premier niveau |
+| `ul > li > ul > li` | Élément imbriqué (second niveau) |
+| `ul > li > ul` | Sous-liste imbriquée |
+
+```css
+ul > li { margin-bottom: 8px; }
+ul > li > ul { margin-top: 4px; }
+ul > li > ul > li { margin-bottom: 4px; }
+```
+
+---
+
+### Tableaux
+
+| Sélecteur | Ce qu'il cible |
+| --------- | -------------- |
+| `table` | Tableau entier |
+| `th` | En-tête de colonne |
+| `td` | Cellule de données |
+| `th, td` | En-têtes et cellules (ensemble) |
+| `tr:nth-child(even)` | Lignes paires (alternance de couleur) |
+
+```css
+table {
+    border-collapse: collapse;
+    display: table;      /* obligatoire pour surcharger md-to-pdf */
+    width: auto;
+    margin: 20px auto;   /* centrage horizontal */
+    border: 1px solid #000;
+    page-break-inside: avoid;
+}
+
+th, td {
+    border: 1px solid #000;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+```
+
+---
+
+### Code
+
+| Sélecteur | Ce qu'il cible |
+| --------- | -------------- |
+| `code` | Code inline (`` `code` ``) |
+| `pre` | Bloc de code (` ```code``` `) |
+| `pre code` | Code à l'intérieur d'un bloc |
+
+```css
+code {
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    background-color: #f4f4f4;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+pre {
+    background-color: #f4f4f4;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+    page-break-inside: avoid;
+}
+
+pre code {
+    background: none;
+    padding: 0;
+}
+```
+
+---
+
+### Alertes GitHub-style
+
+Générées par les balises `> [!TYPE]` dans le Markdown.
+
+| Sélecteur | Ce qu'il cible |
+| --------- | -------------- |
+| `.markdown-alert` | Conteneur de toute alerte |
+| `.markdown-alert p` | Paragraphes à l'intérieur d'une alerte |
+| `.markdown-alert-title` | Ligne de titre (icône + type) |
+| `.markdown-alert-note` | Alerte `[!NOTE]` et `[!INFO]` |
+| `.markdown-alert-tip` | Alerte `[!TIP]` |
+| `.markdown-alert-important` | Alerte `[!IMPORTANT]` |
+| `.markdown-alert-warning` | Alerte `[!WARNING]` |
+| `.markdown-alert-caution` | Alerte `[!CAUTION]` et `[!DANGER]` |
+
+Chaque variante expose aussi `.markdown-alert-<type> .markdown-alert-title` pour la couleur du titre.
+
+```css
+.markdown-alert {
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-left: 4px solid;
+    border-radius: 4px;
+    page-break-inside: avoid;
+}
+
+.markdown-alert-note   { border-left-color: #0969da; background-color: #ddf4ff; }
+.markdown-alert-tip    { border-left-color: #1a7f37; background-color: #dafbe1; }
+.markdown-alert-important { border-left-color: #8250df; background-color: #eddeff; }
+.markdown-alert-warning   { border-left-color: #9a6700; background-color: #fff8c5; }
+.markdown-alert-caution   { border-left-color: #cf222e; background-color: #ffebe9; }
+
+.markdown-alert-note .markdown-alert-title      { color: #0969da; }
+.markdown-alert-tip .markdown-alert-title       { color: #1a7f37; }
+.markdown-alert-important .markdown-alert-title { color: #8250df; }
+.markdown-alert-warning .markdown-alert-title   { color: #9a6700; }
+.markdown-alert-caution .markdown-alert-title   { color: #cf222e; }
+```
+
+---
+
+### Table des matières
+
+Générée par la balise `[[toc]]` dans le Markdown.
+
+| Sélecteur | Ce qu'il cible |
+| --------- | -------------- |
+| `.toc` | Bloc conteneur du sommaire |
+| `.toc-title` | Titre "Sommaire" |
+| `.toc > ul` | Liste racine du sommaire |
+| `.toc ul ul` | Sous-listes imbriquées |
+| `.toc li` | Entrée du sommaire |
+| `.toc li a` | Lien d'une entrée |
+
+```css
+.toc {
+    background-color: #f8f9fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    padding: 16px 24px;
+    margin: 20px 0;
+    page-break-inside: avoid;
+}
+
+.toc-title {
+    font-size: 14pt;
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.toc > ul { list-style: none; padding-left: 0; margin: 0; }
+.toc ul ul { list-style: none; padding-left: 20px; }
+.toc li { margin: 4px 0; line-height: 1.5; }
+.toc li a { color: #333; text-decoration: none; }
+```
+
+---
+
+### Séparateur et saut de page
+
+| Sélecteur | Ce qu'il cible |
+| --------- | -------------- |
+| `hr` | Séparateur horizontal (`---` en Markdown) |
+| `.page-break` | Saut de page (`===` en Markdown) |
+
+```css
+hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 20px 0;
+}
+
+.page-break {
+    page-break-after: always;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+```
+
+---
+
+### Contrôle de la pagination
+
+Ces propriétés CSS s'appliquent à n'importe quel sélecteur pour contrôler les sauts de page automatiques.
+
+| Propriété | Valeurs utiles | Usage |
+| --------- | -------------- | ----- |
+| `page-break-before` | `always`, `avoid`, `auto` | Forcer / interdire un saut avant l'élément |
+| `page-break-after` | `always`, `avoid`, `auto` | Forcer / interdire un saut après l'élément |
+| `page-break-inside` | `avoid`, `auto` | Interdire la coupure à l'intérieur de l'élément |
+
+```css
+/* Ne jamais couper un titre de sa première ligne de contenu */
+h1, h2, h3 { page-break-after: avoid; }
+
+/* Ne pas couper un paragraphe ou une liste en deux pages */
+p, li { page-break-inside: avoid; }
+
+/* Chaque h1 commence une nouvelle page */
+h1 { page-break-before: always; }
+```
+
+> Ces règles peuvent aussi être configurées dynamiquement via l'option `page-break-before` du front matter ou de la CLI, sans modifier le CSS du template.
+
+---
+
 ## Mise à jour
 
 Pour toute mise à jour, il faut désinstaller le projet via le commande :

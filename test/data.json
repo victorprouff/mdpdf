@@ -1,0 +1,11 @@
+  {
+    "type_formation": "Management",
+    "date": "10 mars 2026",
+    "lieu": "Paris",
+    "duree": "7h",
+    "formateur": "Jean Dupont",
+    "participants": [
+      { "num": 1, "nom_prenom": "MARTIN Sophie", "entreprise": "Acme" },
+      { "num": 2, "nom_prenom": "DURAND Paul", "entreprise": "Beta Corp" }
+    ]
+  }

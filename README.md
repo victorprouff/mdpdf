@@ -70,18 +70,19 @@ mdpdf document.md --no-header --no-footer
 
 ## Options
 
-| Option               | Description                                         |
-| -------------------- | --------------------------------------------------- |
-| `--template <nom>`   | Utiliser un template spécifique (défaut: `default`) |
-| `--no-header`        | Désactiver le header                                |
-| `--no-footer`        | Désactiver le footer                                |
-| `--no-logo`          | Désactiver le logo                                  |
-| `--toc-start <n>`    | Niveau de titre minimum dans le sommaire, 1-6 (défaut: 1) |
-| `--toc-depth <n>`    | Niveau de titre maximum dans le sommaire, 1-6 (défaut: 3) |
-| `--landscape`        | Orientation paysage (défaut: portrait)              |
-| `--output <fichier>` | Chemin du fichier PDF de sortie                     |
-| `--list-templates`   | Lister les templates disponibles                    |
-| `--help`, `-h`       | Afficher l'aide                                     |
+| Option                    | Description                                         |
+| ------------------------- | --------------------------------------------------- |
+| `--template <nom>`        | Utiliser un template spécifique (défaut: `default`) |
+| `--data <fichier.json>`   | Données JSON pour le rendu Handlebars du `template.md` |
+| `--no-header`             | Désactiver le header                                |
+| `--no-footer`             | Désactiver le footer                                |
+| `--no-logo`               | Désactiver le logo                                  |
+| `--toc-start <n>`         | Niveau de titre minimum dans le sommaire, 1-6 (défaut: 1) |
+| `--toc-depth <n>`         | Niveau de titre maximum dans le sommaire, 1-6 (défaut: 3) |
+| `--landscape`             | Orientation paysage (défaut: portrait)              |
+| `--output <fichier>`      | Chemin du fichier PDF de sortie                     |
+| `--list-templates`        | Lister les templates disponibles                    |
+| `--help`, `-h`            | Afficher l'aide                                     |
 
 ## Front Matter YAML
 
@@ -292,6 +293,63 @@ L'image sera centrée, affichée avec une largeur de 500px et `alt="Mon schéma"
 | `![Mon schéma](./img.png)` | Centrée, taille naturelle, alt="Mon schéma" |
 | `![](./img.png)` | Centrée, taille naturelle |
 
+## Templates dynamiques (Handlebars)
+
+L'option `--data <fichier.json>` permet de générer un PDF à partir d'un template Markdown avec des données dynamiques injectées via [Handlebars](https://handlebarsjs.com/).
+
+### Fonctionnement
+
+- **Sans fichier `.md`** : mdpdf cherche automatiquement `template.md` dans le dossier du template sélectionné (`~/.mdpdf/templates/<nom>/template.md`)
+- **Avec un fichier `.md`** : ce fichier est utilisé comme template Handlebars
+
+Le front matter YAML de `template.md` est toujours parsé normalement (pour les options `template`, `landscape`, etc.). Le rendu Handlebars s'applique uniquement sur le corps du document, après extraction du front matter.
+
+### Exemple
+
+`~/.mdpdf/templates/feuille-presence/template.md` :
+
+```markdown
+---
+template: feuille-presence
+landscape: true
+---
+
+# Feuille de présence — {{type_formation}}
+
+| **Date** | {{date}} |
+| **Lieu** | {{lieu}} |
+| **Formateur** | {{formateur}} |
+
+| **N°** | **NOM Prénom** | **Entreprise** |
+|:---:|:---|:---|
+{{#each participants}}
+| {{num}} | {{nom_prenom}} | {{entreprise}} |
+{{/each}}
+```
+
+`data.json` :
+
+```json
+{
+  "type_formation": "Management",
+  "date": "10 mars 2026",
+  "lieu": "Paris",
+  "formateur": "Jean Dupont",
+  "participants": [
+    { "num": 1, "nom_prenom": "MARTIN Sophie", "entreprise": "Acme" },
+    { "num": 2, "nom_prenom": "DURAND Paul", "entreprise": "Beta Corp" }
+  ]
+}
+```
+
+Commande :
+
+```bash
+mdpdf --template feuille-presence --data data.json --output sortie.pdf
+```
+
+Toute la syntaxe Handlebars est supportée : `{{variable}}`, `{{#each}}`, `{{#if}}`, helpers, etc.
+
 ## Fonctionnalités
 
 - ✅ Header avec logo et date
@@ -307,6 +365,7 @@ L'image sera centrée, affichée avec une largeur de 500px et `alt="Mon schéma"
 - ✅ Table des matières avec `[[toc]]` (profondeur configurable)
 - ✅ Séparateur visuel avec `---`, saut de page avec `===`
 - ✅ Images centrées avec redimensionnement Obsidian (`![largeur](path)`)
+- ✅ Templates dynamiques via Handlebars (`--data data.json`)
 
 ## Structure du PDF
 
@@ -323,6 +382,7 @@ mon-template/
 ├── header.html       # Template du header (variables : {{LOGO}}, {{DATE}})
 ├── footer.html       # Template du footer (variables : {{LOGO}}, {{DATE}})
 ├── template.css      # Styles CSS
+├── template.md       # Template Markdown Handlebars (optionnel, pour --data)
 └── logo.png          # Logo (optionnel)
 ```
 
@@ -650,3 +710,4 @@ npm unlink mdpdf
 - [glob](https://www.npmjs.com/package/glob) - Recherche de fichiers
 - [gray-matter](https://www.npmjs.com/package/gray-matter) - Parsing du front matter YAML
 - [marked](https://www.npmjs.com/package/marked) - Rendu du markdown inline dans les alertes
+- [handlebars](https://www.npmjs.com/package/handlebars) - Rendu des templates dynamiques

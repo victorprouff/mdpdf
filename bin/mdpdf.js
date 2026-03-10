@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { glob } from 'glob';
 import matter from 'gray-matter';
 import { marked } from 'marked';
+import Handlebars from 'handlebars';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,7 +47,8 @@ function loadTemplate(templateName) {
         header: path.join(templatePath, 'header.html'),
         footer: path.join(templatePath, 'footer.html'),
         css: path.join(templatePath, 'template.css'),
-        logo: path.join(templatePath, 'logo.png')
+        logo: path.join(templatePath, 'logo.png'),
+        md: path.join(templatePath, 'template.md')
     };
 }
 
@@ -645,7 +647,7 @@ function extractPageMargins(css) {
 }
 
 // Fonction pour générer un PDF
-async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set()) {
+async function generatePDF(mdFile, cliOptions = {}, cliExplicit = new Set(), dataPath = null) {
     const today = formatDate();
 
     // Parser le front matter et fusionner avec les options CLI
@@ -777,7 +779,17 @@ ${selectors.join(', ')} {
         // Lire le contenu markdown et convertir les images locales en base64
         const rawContent = fs.readFileSync(mdFile, 'utf8');
         const { content: mdContent } = matter(rawContent);
-        const imagesProcessed = processImages(mdContent, path.dirname(mdFile));
+
+        // Rendu Handlebars si --data fourni
+        let renderedContent = mdContent;
+        if (dataPath) {
+            const jsonData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+            const hbsTemplate = Handlebars.compile(mdContent);
+            renderedContent = hbsTemplate(jsonData);
+            console.log(`🔧 Template Handlebars rendu avec : ${path.basename(dataPath)}`);
+        }
+
+        const imagesProcessed = processImages(renderedContent, path.dirname(mdFile));
         const pageBreaksProcessed = processPageBreaks(imagesProcessed);
         const tocProcessed = processToc(pageBreaksProcessed, options['toc-start'], options['toc-depth']);
         const processedContent = processAlerts(tocProcessed);
@@ -897,6 +909,9 @@ async function main() {
             cliOptions.output = args[i + 1];
             cliExplicit.add('output');
             i++;
+        } else if (args[i] === '--data' && args[i + 1]) {
+            cliOptions.data = args[i + 1];
+            i++;
         } else if (args[i] === '--list-templates') {
             listTemplates();
             return;
@@ -908,18 +923,38 @@ async function main() {
         }
     }
     
-    // Si aucun fichier spécifié, chercher tous les .md dans le répertoire courant
+    // Si aucun fichier spécifié
     if (files.length === 0) {
-        files = await glob('*.md', { cwd: process.cwd() });
-        
-        if (files.length === 0) {
-            console.log('ℹ️  Aucun fichier Markdown trouvé dans le répertoire courant.');
-            return;
+        if (cliOptions.data) {
+            // Mode template dynamique : chercher template.md dans le répertoire du template
+            const templateName = cliOptions.template || 'default';
+            const userTemplateMd = path.join(USER_TEMPLATES, templateName, 'template.md');
+            const projectTemplateMd = path.join(PROJECT_TEMPLATES, templateName, 'template.md');
+
+            if (fs.existsSync(userTemplateMd)) {
+                files = [userTemplateMd];
+                console.log(`📄 template.md trouvé : ~/.mdpdf/templates/${templateName}/template.md`);
+            } else if (fs.existsSync(projectTemplateMd)) {
+                files = [projectTemplateMd];
+                console.log(`📄 template.md trouvé : ./templates/${templateName}/template.md`);
+            } else {
+                console.error(`❌ template.md introuvable dans le template "${templateName}"`);
+                console.error(`   Chemin cherché : ~/.mdpdf/templates/${templateName}/template.md`);
+                return;
+            }
+        } else {
+            // Chercher tous les .md dans le répertoire courant
+            files = await glob('*.md', { cwd: process.cwd() });
+
+            if (files.length === 0) {
+                console.log('ℹ️  Aucun fichier Markdown trouvé dans le répertoire courant.');
+                return;
+            }
+
+            console.log(`📚 ${files.length} fichier(s) Markdown trouvé(s):\n`);
+            files.forEach(f => console.log(`   - ${f}`));
+            console.log('');
         }
-        
-        console.log(`📚 ${files.length} fichier(s) Markdown trouvé(s):\n`);
-        files.forEach(f => console.log(`   - ${f}`));
-        console.log('');
     }
     
     // Convertir tous les fichiers
@@ -931,7 +966,7 @@ async function main() {
             continue;
         }
         
-        await generatePDF(fullPath, cliOptions, cliExplicit);
+        await generatePDF(fullPath, cliOptions, cliExplicit, cliOptions.data || null);
     }
     
     console.log('\n✨ Conversion terminée !');
@@ -953,9 +988,12 @@ EXEMPLES:
     mdpdf document.md --no-footer        # Sans footer
     mdpdf document.md --landscape        # Orientation paysage
     mdpdf document.md --no-header --no-footer # Sans header ni footer
+    mdpdf --template feuille-presence --data /tmp/data.json --output sortie.pdf
+                                         # Rendu Handlebars depuis template.md du template
 
 OPTIONS:
     --template <nom>                     # Utiliser un template spécifique (défaut: default)
+    --data <fichier.json>                # Données JSON pour le rendu Handlebars du template.md
     --no-header                          # Désactiver le header
     --no-footer                          # Désactiver le footer
     --no-logo                            # Désactiver le logo
@@ -1008,6 +1046,7 @@ TEMPLATES:
     ├── header.html       # Template du header (optionnel)
     ├── footer.html       # Template du footer (optionnel)
     ├── template.css      # Styles CSS
+    ├── template.md       # Template Markdown Handlebars (optionnel, pour --data)
     └── logo.png          # Logo (optionnel)
 
     Variables disponibles dans header.html et footer.html :

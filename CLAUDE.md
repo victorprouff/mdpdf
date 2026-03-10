@@ -8,6 +8,8 @@ CLI Node.js pour convertir des fichiers Markdown en PDF professionnels avec temp
 - `md-to-pdf` (v5) — conversion MD → PDF via Puppeteer
 - `gray-matter` — parsing du front matter YAML
 - `glob` — recherche de fichiers
+- `marked` — rendu markdown inline dans les alertes et la TOC
+- `handlebars` — rendu des templates dynamiques (`--data`)
 
 ## Structure du projet
 
@@ -17,7 +19,7 @@ lib/template.js       # Export du CSS par défaut (defaultCSS)
 templates/default/    # Template par défaut embarqué (template.css uniquement)
 ```
 
-Le projet est volontairement simple : un seul fichier principal `bin/mdpdf.js` (~530 lignes) qui contient tout.
+Le projet est volontairement simple : un seul fichier principal `bin/mdpdf.js` (~1050 lignes) qui contient tout.
 
 ## Système de templates
 
@@ -29,6 +31,7 @@ Chaque template peut contenir :
 - `header.html` — template header (variables : `{{LOGO}}`, `{{DATE}}`)
 - `footer.html` — template footer (variables : `{{LOGO}}`, `{{DATE}}`)
 - `logo.png` — logo converti en base64 data URI
+- `template.md` — template Markdown Handlebars (optionnel, utilisé avec `--data`)
 
 Templates existants : `default` (CSS seul, sans header/footer), `formation` (complet, dans ~/.mdpdf/templates/).
 
@@ -54,9 +57,9 @@ Le tracking des options CLI explicites se fait via un `Set` (`cliExplicit`) pour
 
 ## Options CLI
 
-`--template <nom>`, `--no-header`, `--no-footer`, `--no-logo`, `--landscape`, `--output <fichier>`, `--list-templates`, `--help`
+`--template <nom>`, `--data <fichier.json>`, `--no-header`, `--no-footer`, `--no-logo`, `--landscape`, `--output <fichier>`, `--list-templates`, `--help`
 
-Sans argument fichier : convertit tous les `.md` du répertoire courant.
+Sans argument fichier : convertit tous les `.md` du répertoire courant (ou cherche `template.md` du template si `--data` est fourni).
 
 ## Conventions de code
 
